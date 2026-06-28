@@ -4,14 +4,14 @@ Money manager is a web application which lets you manage your day to day finance
 
 ## About
 
-Money manager is a web application which lets you manage your day to day finances. Income and Expense tracking, Budgetting, Lending Tracking, Loan Tracking, Investments Tracking, etc.
+Money manager is a web application which lets you manage your day to day finances. Income and Expense tracking, Budgeting, Lending Tracking, Loan Tracking, Investments Tracking, etc.
 
 ## Features
 
 - Sign up using email and password
 - Sign in using email and password
 - Log out
-- Home Page Dashboard with Expense, Income, Budgetting, Lending, Loan, Investments, with High level insigts of each currently only income and expense dashboard will be available other features are developed in a later stage.
+- Home Page Dashboard with Expense, Income, Budgeting, Lending, Loan, Investments, with High level insights of each currently only income and expense dashboard will be available other features are developed in a later stage.
 - Transaction Dashboard which Shows Monthly transactions in a simple UI
 - Add transactions
 - Update existing transactions
