@@ -1,6 +1,6 @@
 # Money Manager by Vinay
 
-Money manager is a web application which lets you manage your day to day finances. Income and Expense tracking, Budgeting, Lending Tracking, Loan Tracking, Investments Tracking, etc.
+A modern full-stack personal finance management application built with Java, Spring Boot, React and PostgreSQL.
 
 ## About
 
