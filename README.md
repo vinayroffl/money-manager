@@ -1,7 +1,6 @@
-# money-manager
-Money manager is a web application which lets you manage your day to day finances. Income and Expense tracking, Budgetting, Lending Tracking, Loan Tracking, Investments Tracking, etc.
-=======
 # Money Manager by Vinay
+
+Money manager is a web application which lets you manage your day to day finances. Income and Expense tracking, Budgeting, Lending Tracking, Loan Tracking, Investments Tracking, etc.
 
 ## About
 
