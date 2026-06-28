@@ -17,7 +17,7 @@ This will be a modular monolithic application. As it is a small project and ther
 
 ## Backend
 
-This will be written in Java Springboot.
+The backend will be built using Java 21 and Spring Boot 3.x.
 
 ```text
 .
@@ -44,7 +44,7 @@ This will be written in React
 
 ## Database
 
-Postgresql will be the Database for this project
+PostgreSQL will be the primary relational database.
 
 ## Authentication
 
