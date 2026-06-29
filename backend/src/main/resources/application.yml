@@ -8,14 +8,14 @@ spring:
     console:
       enabled: 'true'
   application:
-    name: money-manager-backend
+    name: Money Manager
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
 
-server:
+#server:
 
-management:
+#management:
 
-application:
+#application:
