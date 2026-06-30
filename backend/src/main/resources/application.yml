@@ -6,16 +6,10 @@ spring:
     password: ''
   h2:
     console:
-      enabled: 'true'
+      enabled: true
   application:
     name: Money Manager
   jpa:
     database-platform: org.hibernate.dialect.H2Dialect
     hibernate:
       ddl-auto: create-drop
-
-#server:
-
-#management:
-
-#application:
