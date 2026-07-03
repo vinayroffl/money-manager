@@ -1,4 +1,4 @@
-package com.vinay.moneymanager.user.dto;
+package com.vinay.moneymanager.user.dto.request;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
