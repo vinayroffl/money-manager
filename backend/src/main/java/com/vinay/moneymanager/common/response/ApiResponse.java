@@ -1,8 +1,12 @@
 package com.vinay.moneymanager.common.response;
 
-import lombok.Data;
+import lombok.*;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ApiResponse<T> {
 
     private boolean success;

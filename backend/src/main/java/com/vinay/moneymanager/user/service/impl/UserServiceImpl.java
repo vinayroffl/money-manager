@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
         boolean emailExists = userRepository.existsByEmail(request.getEmail());
 
         if (emailExists)
-            throw new DuplicateResourceException("User with email "+ request.getEmail()+ " already exists");
+            throw new DuplicateResourceException("User with email " + request.getEmail() + " already exists");
 
         String encodedPassword = passwordEncoder.encode(request.getPassword());
 
@@ -35,14 +35,12 @@ public class UserServiceImpl implements UserService {
                 .build();
         userRepository.save(user);
 
-        RegisterResponse response = RegisterResponse.builder()
+        return RegisterResponse.builder()
                 .id(user.getId())
                 .email(request.getEmail())
                 .firstName(request.getFirstName())
                 .lastName(request.getLastName())
                 .createdAt(user.getCreatedAt())
                 .build();
-
-        return response;
     }
 }

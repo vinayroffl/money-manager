@@ -1,14 +1,22 @@
 package com.vinay.moneymanager.common.response;
 
-import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ApiError {
-    private boolean success;
+
+    private boolean success = false;
     private String message;
     private LocalDateTime timestamp;
+
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<ValidationError> errors;
 }
