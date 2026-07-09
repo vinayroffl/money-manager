@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.vinay.moneymanager.common.exception.DuplicateResourceException;
 import com.vinay.moneymanager.common.exception.GlobalExceptionHandler;
 import com.vinay.moneymanager.config.SecurityConfig;
+import com.vinay.moneymanager.security.entrypoint.JwtAuthenticationEntryPoint;
+import com.vinay.moneymanager.security.service.CustomUserDetailsService;
 import com.vinay.moneymanager.user.dto.request.RegisterRequest;
 import com.vinay.moneymanager.user.dto.response.RegisterResponse;
 import com.vinay.moneymanager.user.service.UserService;
@@ -35,6 +37,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
+
+    @MockitoBean
+    private CustomUserDetailsService customUserDetailsService;
 
     @Autowired
     private ObjectMapper objectMapper;
