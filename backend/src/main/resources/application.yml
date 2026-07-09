@@ -1,0 +1,10 @@
+spring:
+  application:
+    name: Money Manager
+
+  profiles:
+    active: dev
+
+jwt:
+  secret: "5fd61df8fe8d2d9aa1599e8c000eacc039bf5effd9aeee02491f39610b5e53f3"
+  expiration: 3600000
