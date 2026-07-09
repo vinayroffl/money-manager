@@ -15,10 +15,10 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class JwtServiceTest {
 
-    private JwtService jwtService;
-    private UserDetails userDetails;
     private static final String SECRET = "mySecretKeyForJwtTestingThatIsAtLeast32CharactersLong";
     private static final long EXPIRATION = 3600000L;
+    private JwtService jwtService;
+    private UserDetails userDetails;
 
     @BeforeEach
     void setUp() {
@@ -44,37 +44,37 @@ class JwtServiceTest {
     }
 
     @Test
-    void shouldValidateTokenForCorrectUser(){
+    void shouldValidateTokenForCorrectUser() {
         String token = jwtService.generateToken(userDetails);
         assertTrue(jwtService.isTokenValid(token, userDetails));
     }
 
     @Test
-    void shouldNotValidateTokenForIncorrectUser(){
+    void shouldNotValidateTokenForIncorrectUser() {
         String token = jwtService.generateToken(userDetails);
-        UserDetails anotherUser =new User("abc@test.com", "password", List.of());
+        UserDetails anotherUser = new User("abc@test.com", "password", List.of());
         boolean tokenValid = jwtService.isTokenValid(token, anotherUser);
         assertFalse(tokenValid);
     }
 
     @Test
-    void shouldThrowExceptionForMalformedToken(){
+    void shouldThrowExceptionForMalformedToken() {
         String token = "RandomString";
-        assertThrows(MalformedJwtException.class, ()->jwtService.extractUsername(token));
+        assertThrows(MalformedJwtException.class, () -> jwtService.extractUsername(token));
     }
 
     @Test
-    void shouldThrowExceptionForExpiredToken(){
+    void shouldThrowExceptionForExpiredToken() {
         JwtService shortJwtService = new JwtService();
         ReflectionTestUtils.setField(shortJwtService, "secret", SECRET);
         ReflectionTestUtils.setField(shortJwtService, "expiration", -1);
         String token = shortJwtService.generateToken(userDetails);
-        assertThrows(ExpiredJwtException.class, ()->shortJwtService.extractUsername(token));
+        assertThrows(ExpiredJwtException.class, () -> shortJwtService.extractUsername(token));
 
     }
 
     @Test
-    void shouldHaveExpiration(){
+    void shouldHaveExpiration() {
         String token = jwtService.generateToken(userDetails);
         Date expiration = jwtService.extractExpiration(token);
         assertNotNull(expiration);

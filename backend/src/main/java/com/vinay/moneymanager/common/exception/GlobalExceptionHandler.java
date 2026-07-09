@@ -42,9 +42,9 @@ public class GlobalExceptionHandler {
         List<ValidationError> validationErrors = exception.getBindingResult().getFieldErrors().stream()
                 .map(fieldError ->
                         ValidationError.builder()
-                            .field(fieldError.getField())
-                            .message(fieldError.getDefaultMessage())
-                            .build())
+                                .field(fieldError.getField())
+                                .message(fieldError.getDefaultMessage())
+                                .build())
                 .toList();
         ApiError apiError = ApiError.builder()
                 .message("Validation failed")

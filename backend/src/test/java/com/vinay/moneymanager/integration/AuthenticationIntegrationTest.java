@@ -18,8 +18,8 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -143,8 +143,8 @@ class AuthenticationIntegrationTest {
         LoginRequest loginRequest = createLoginRequest(registerRequest.getEmail(), registerRequest.getPassword());
 
         MvcResult mvcResult = mockMvc.perform(post("/api/auth/login")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(objectMapper.writeValueAsString(loginRequest)))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.message").value("Login successfully"))
@@ -154,7 +154,8 @@ class AuthenticationIntegrationTest {
 
         String responseBody = mvcResult.getResponse().getContentAsString();
         ApiResponse<LoginResponse> apiResponse =
-                objectMapper.readValue(responseBody, new TypeReference<ApiResponse<LoginResponse>>() {});
+                objectMapper.readValue(responseBody, new TypeReference<ApiResponse<LoginResponse>>() {
+                });
         String token = apiResponse.getData().getToken();
 
         mockMvc.perform(get("/api/users/me").header("Authorization", "Bearer " + token))
