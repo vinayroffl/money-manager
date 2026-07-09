@@ -5,6 +5,7 @@ import com.vinay.moneymanager.common.exception.DuplicateResourceException;
 import com.vinay.moneymanager.common.exception.GlobalExceptionHandler;
 import com.vinay.moneymanager.config.SecurityConfig;
 import com.vinay.moneymanager.security.entrypoint.JwtAuthenticationEntryPoint;
+import com.vinay.moneymanager.security.jwt.JwtService;
 import com.vinay.moneymanager.security.service.CustomUserDetailsService;
 import com.vinay.moneymanager.user.dto.request.RegisterRequest;
 import com.vinay.moneymanager.user.dto.response.RegisterResponse;
@@ -37,6 +38,9 @@ class AuthControllerTest {
 
     @MockitoBean
     private UserService userService;
+
+    @MockitoBean
+    private JwtService jwtService;
 
     @MockitoBean
     private JwtAuthenticationEntryPoint jwtAuthenticationEntryPoint;
