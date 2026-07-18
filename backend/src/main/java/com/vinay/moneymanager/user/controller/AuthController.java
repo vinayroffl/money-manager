@@ -18,40 +18,42 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserService userService;
+  private final UserService userService;
 
-    @PostMapping("/register")
-    public ResponseEntity<ApiResponse<RegisterResponse>> register(@Valid @RequestBody RegisterRequest request) {
+  @PostMapping("/register")
+  public ResponseEntity<ApiResponse<RegisterResponse>> register(
+      @Valid @RequestBody RegisterRequest request) {
 
-        RegisterResponse registerResponse = userService.register(request);
+    RegisterResponse registerResponse = userService.register(request);
 
-        ApiResponse<RegisterResponse> response = ApiResponse.<RegisterResponse>builder()
-                .success(true)
-                .message("User registered successfully")
-                .data(registerResponse)
-                .build();
+    ApiResponse<RegisterResponse> response =
+        ApiResponse.<RegisterResponse>builder()
+            .success(true)
+            .message("User registered successfully")
+            .data(registerResponse)
+            .build();
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(response);
-    }
+    return ResponseEntity.status(HttpStatus.CREATED).body(response);
+  }
 
-    @PostMapping("/login")
-    public ResponseEntity<ApiResponse<LoginResponse>> login(@Valid @RequestBody LoginRequest request) {
+  @PostMapping("/login")
+  public ResponseEntity<ApiResponse<LoginResponse>> login(
+      @Valid @RequestBody LoginRequest request) {
 
-        LoginResponse loginResponse = userService.login(request);
+    LoginResponse loginResponse = userService.login(request);
 
+    ApiResponse<LoginResponse> response =
+        ApiResponse.<LoginResponse>builder()
+            .success(true)
+            .message("Login successfully")
+            .data(loginResponse)
+            .build();
 
-        ApiResponse<LoginResponse> response = ApiResponse.<LoginResponse>builder()
-                .success(true)
-                .message("Login successfully")
-                .data(loginResponse)
-                .build();
+    return ResponseEntity.ok().body(response);
+  }
 
-        return ResponseEntity.ok().body(response);
-    }
-
-    @GetMapping("/api/test/me")
-    public ResponseEntity<String> me(Authentication authentication) {
-        return ResponseEntity.ok(authentication.getName());
-    }
-
+  @GetMapping("/api/test/me")
+  public ResponseEntity<String> me(Authentication authentication) {
+    return ResponseEntity.ok(authentication.getName());
+  }
 }
