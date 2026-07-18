@@ -8,6 +8,6 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class ValidationError {
-    private String field;
-    private String message;
+  private String field;
+  private String message;
 }

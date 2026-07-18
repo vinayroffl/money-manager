@@ -13,17 +13,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 public class UserController {
 
-    private final UserService userService;
+  private final UserService userService;
 
-    @GetMapping("/api/users/me")
-    public ResponseEntity<ApiResponse<RegisterResponse>> me(Authentication authentication) {
-        String username = authentication.getName();
-        RegisterResponse basicUserDetails = userService.getBasicUserDetails(username);
-        ApiResponse<RegisterResponse> response = ApiResponse.<RegisterResponse>builder()
-                .success(true)
-                .message("User Data Fetched Successfully!")
-                .data(basicUserDetails)
-                .build();
-        return ResponseEntity.ok(response);
-    }
+  @GetMapping("/api/users/me")
+  public ResponseEntity<ApiResponse<RegisterResponse>> me(Authentication authentication) {
+    String username = authentication.getName();
+    RegisterResponse basicUserDetails = userService.getBasicUserDetails(username);
+    ApiResponse<RegisterResponse> response =
+        ApiResponse.<RegisterResponse>builder()
+            .success(true)
+            .message("User Data Fetched Successfully!")
+            .data(basicUserDetails)
+            .build();
+    return ResponseEntity.ok(response);
+  }
 }

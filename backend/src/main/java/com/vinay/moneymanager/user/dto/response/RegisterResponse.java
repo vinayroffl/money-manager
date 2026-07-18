@@ -1,9 +1,8 @@
 package com.vinay.moneymanager.user.dto.response;
 
-import lombok.*;
-
 import java.time.LocalDateTime;
 import java.util.UUID;
+import lombok.*;
 
 @Builder
 @Getter
@@ -11,9 +10,9 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegisterResponse {
-    UUID id;
-    String email;
-    String firstName;
-    String lastName;
-    LocalDateTime createdAt;
+  UUID id;
+  String email;
+  String firstName;
+  String lastName;
+  LocalDateTime createdAt;
 }

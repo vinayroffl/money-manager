@@ -7,9 +7,9 @@ import com.vinay.moneymanager.user.dto.response.RegisterResponse;
 import jakarta.validation.Valid;
 
 public interface UserService {
-    RegisterResponse register(RegisterRequest request);
+  RegisterResponse register(RegisterRequest request);
 
-    LoginResponse login(@Valid LoginRequest request);
+  LoginResponse login(@Valid LoginRequest request);
 
-    RegisterResponse getBasicUserDetails(String username);
+  RegisterResponse getBasicUserDetails(String username);
 }
