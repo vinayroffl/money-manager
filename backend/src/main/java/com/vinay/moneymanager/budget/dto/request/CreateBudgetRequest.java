@@ -11,9 +11,9 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class CreateBudgetRequest {
-  @NotBlank
-  @Size(min = 1, max = 100)
-  private String categoryName;
+  @NotNull
+  @Min(1)
+  private Integer categoryId;
 
   @NotNull
   @DecimalMin("0.01")

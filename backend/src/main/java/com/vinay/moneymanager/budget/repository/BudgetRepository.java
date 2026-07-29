@@ -1,4 +1,4 @@
-package com.vinay.moneymanager.budget;
+package com.vinay.moneymanager.budget.repository;
 
 import com.vinay.moneymanager.budget.entity.Budget;
 import com.vinay.moneymanager.transaction.entity.Category;
