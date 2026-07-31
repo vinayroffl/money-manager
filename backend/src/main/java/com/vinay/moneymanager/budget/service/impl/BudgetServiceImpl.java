@@ -8,6 +8,7 @@ import com.vinay.moneymanager.budget.repository.BudgetRepository;
 import com.vinay.moneymanager.budget.service.BudgetService;
 import com.vinay.moneymanager.common.exception.DuplicateResourceException;
 import com.vinay.moneymanager.common.exception.FeatureNotImplementedException;
+import com.vinay.moneymanager.common.exception.InvalidRequestException;
 import com.vinay.moneymanager.common.exception.ResourceNotFoundException;
 import com.vinay.moneymanager.transaction.entity.Category;
 import com.vinay.moneymanager.transaction.entity.TransactionType;
@@ -51,7 +52,7 @@ public class BudgetServiceImpl implements BudgetService {
     Budget budget =
         budgetRepository
             .findByIdAndUser(budgetId, user)
-            .orElseThrow(() -> new ResourceNotFoundException("Budget Not Found"));
+            .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
     return mapToBudgetResponse(user, budget);
   }
 
@@ -71,13 +72,13 @@ public class BudgetServiceImpl implements BudgetService {
   }
 
   @Override
-  public void deleteBudget(String budgetId, String userEmail) {
+  public void deleteBudget(UUID budgetId, String userEmail) {
     throw new FeatureNotImplementedException("Feature not Implemented");
   }
 
   private void validateExpenseCategory(Category category) {
     if (category.getTransactionType() != TransactionType.EXPENSE) {
-      throw new IllegalArgumentException("Budgets can only be created for expense categories");
+      throw new InvalidRequestException("Budgets can only be created for expense categories");
     }
   }
 

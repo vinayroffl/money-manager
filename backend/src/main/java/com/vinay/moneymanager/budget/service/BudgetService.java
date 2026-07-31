@@ -19,5 +19,5 @@ public interface BudgetService {
 
   BudgetResponse updateBudget(UUID budgetId, UpdateBudgetRequest request, String userEmail);
 
-  void deleteBudget(String budgetId, String userEmail);
+  void deleteBudget(UUID budgetId, String userEmail);
 }

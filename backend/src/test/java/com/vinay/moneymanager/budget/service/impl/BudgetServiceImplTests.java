@@ -1,16 +1,17 @@
 package com.vinay.moneymanager.budget.service.impl;
 
 import static java.math.BigDecimal.ZERO;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 import com.vinay.moneymanager.budget.dto.request.CreateBudgetRequest;
 import com.vinay.moneymanager.budget.dto.response.BudgetResponse;
 import com.vinay.moneymanager.budget.entity.Budget;
 import com.vinay.moneymanager.budget.repository.BudgetRepository;
+import com.vinay.moneymanager.common.exception.DuplicateResourceException;
+import com.vinay.moneymanager.common.exception.InvalidRequestException;
+import com.vinay.moneymanager.common.exception.ResourceNotFoundException;
 import com.vinay.moneymanager.transaction.entity.Category;
 import com.vinay.moneymanager.transaction.entity.TransactionType;
 import com.vinay.moneymanager.transaction.repository.CategoryRepository;
@@ -43,17 +44,20 @@ class BudgetServiceImplTests {
 
   private User user;
   private Category category;
+  private Budget budget;
 
   @BeforeEach
   void setUp() {
     user = getUser();
     category = getCategory();
+    budget = getSavedBudget(createBudgetRequest(category), category, user);
   }
 
   private Category getCategory() {
     return Category.builder().id(1).name("Food").transactionType(TransactionType.EXPENSE).build();
   }
 
+  // CREATE
   @Test
   void shouldCreateBudgetSuccessfully() {
     CreateBudgetRequest request = createBudgetRequest(category);
@@ -85,6 +89,69 @@ class BudgetServiceImplTests {
   }
 
   @Test
+  void shouldThrowExceptionWhenUserNotFound() {
+    CreateBudgetRequest request = createBudgetRequest(category);
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () -> budgetService.createBudget(request, user.getEmail()));
+
+    assertEquals("Authenticated user not found", exception.getMessage());
+    verify(budgetRepository, never()).save(any(Budget.class));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenCategoryNotFound() {
+    CreateBudgetRequest request = createBudgetRequest(category);
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(categoryRepository.findById(anyInt())).thenReturn(Optional.empty());
+
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () -> budgetService.createBudget(request, user.getEmail()));
+
+    assertEquals("Category not found", exception.getMessage());
+    verify(budgetRepository, never()).save(any(Budget.class));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenCategoryIsIncome() {
+    CreateBudgetRequest request = createBudgetRequest(category);
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    category.setTransactionType(TransactionType.INCOME);
+    when(categoryRepository.findById(anyInt())).thenReturn(Optional.of(category));
+
+    InvalidRequestException exception =
+        assertThrowsExactly(
+            InvalidRequestException.class,
+            () -> budgetService.createBudget(request, user.getEmail()));
+
+    assertEquals("Budgets can only be created for expense categories", exception.getMessage());
+    verify(budgetRepository, never()).save(any(Budget.class));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenBudgetAlreadyExists() {
+    CreateBudgetRequest request = createBudgetRequest(category);
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(categoryRepository.findById(anyInt())).thenReturn(Optional.of(category));
+    when(budgetRepository.findByUserAndCategoryAndMonthAndYear(
+            user, category, request.getMonth(), request.getYear()))
+        .thenReturn(Optional.of(budget));
+
+    DuplicateResourceException exception =
+        assertThrowsExactly(
+            DuplicateResourceException.class,
+            () -> budgetService.createBudget(request, user.getEmail()));
+    assertEquals("Budget already exists for this category and month", exception.getMessage());
+    verify(budgetRepository, never()).save(any(Budget.class));
+  }
+
+  // GET BY ID
+  @Test
   void shouldReturnBudgetSuccessfully() {
     CreateBudgetRequest request = createBudgetRequest(category);
     Budget savedBudget = getSavedBudget(request, category, user);
@@ -104,6 +171,33 @@ class BudgetServiceImplTests {
     assertEquals(savedBudget.getYear(), budgetResponse.getYear());
   }
 
+  @Test
+  void shouldThrowExceptionWhenBudgetNotFound() {
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByIdAndUser(any(UUID.class), any(User.class)))
+        .thenReturn(Optional.empty());
+
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () -> budgetService.getBudgetById(budget.getId(), user.getEmail()));
+    assertEquals("Budget not found", exception.getMessage());
+    verify(budgetRepository, never()).save(any(Budget.class));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenAuthenticatedUserNotFound() {
+
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () -> budgetService.getBudgetById(budget.getId(), user.getEmail()));
+    assertEquals("Authenticated user not found", exception.getMessage());
+    verify(budgetRepository, never()).save(any(Budget.class));
+  }
+
+  // Helper Methods
   private Budget getSavedBudget(CreateBudgetRequest request, Category category, User user) {
     LocalDateTime createdAt = LocalDateTime.of(2026, Month.JULY, 30, 17, 53, 0);
     return Budget.builder()
