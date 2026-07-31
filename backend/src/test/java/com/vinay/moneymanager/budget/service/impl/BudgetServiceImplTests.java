@@ -84,6 +84,26 @@ class BudgetServiceImplTests {
     assertEquals(ZERO, budgetResponse.getSpentAmount());
   }
 
+  @Test
+  void shouldReturnBudgetSuccessfully() {
+    CreateBudgetRequest request = createBudgetRequest(category);
+    Budget savedBudget = getSavedBudget(request, category, user);
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByIdAndUser(any(UUID.class), any(User.class)))
+        .thenReturn(Optional.of(savedBudget));
+    when(transactionRepository.sumExpenseByUserAndCategoryAndMonthAndYear(
+            any(), any(), anyInt(), anyInt()))
+        .thenReturn(ZERO);
+    BudgetResponse budgetResponse =
+        budgetService.getBudgetById(savedBudget.getId(), user.getEmail());
+    verify(budgetRepository).findByIdAndUser(any(UUID.class), any(User.class));
+
+    assertEquals(savedBudget.getAmount(), budgetResponse.getAmount());
+    assertEquals(savedBudget.getId(), budgetResponse.getId());
+    assertEquals(savedBudget.getMonth(), budgetResponse.getMonth());
+    assertEquals(savedBudget.getYear(), budgetResponse.getYear());
+  }
+
   private Budget getSavedBudget(CreateBudgetRequest request, Category category, User user) {
     LocalDateTime createdAt = LocalDateTime.of(2026, Month.JULY, 30, 17, 53, 0);
     return Budget.builder()
