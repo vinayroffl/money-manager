@@ -20,8 +20,9 @@ import java.time.Month;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
 
-// @Service
+@Service
 @RequiredArgsConstructor
 public class BudgetServiceImpl implements BudgetService {
 
@@ -46,7 +47,12 @@ public class BudgetServiceImpl implements BudgetService {
 
   @Override
   public BudgetResponse getBudgetById(UUID budgetId, String userEmail) {
-    throw new FeatureNotImplementedException("Feature not Implemented");
+    User user = getAuthenticatedUser(userEmail);
+    Budget budget =
+        budgetRepository
+            .findByIdAndUser(budgetId, user)
+            .orElseThrow(() -> new ResourceNotFoundException("Budget Not Found"));
+    return mapToBudgetResponse(user, budget);
   }
 
   @Override
