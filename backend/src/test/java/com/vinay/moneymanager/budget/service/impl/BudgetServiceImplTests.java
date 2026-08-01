@@ -2,10 +2,12 @@ package com.vinay.moneymanager.budget.service.impl;
 
 import static java.math.BigDecimal.ZERO;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertThrowsExactly;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 import com.vinay.moneymanager.budget.dto.request.CreateBudgetRequest;
+import com.vinay.moneymanager.budget.dto.request.UpdateBudgetRequest;
 import com.vinay.moneymanager.budget.dto.response.BudgetResponse;
 import com.vinay.moneymanager.budget.entity.Budget;
 import com.vinay.moneymanager.budget.repository.BudgetRepository;
@@ -21,8 +23,7 @@ import com.vinay.moneymanager.user.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Month;
-import java.util.Optional;
-import java.util.UUID;
+import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -35,6 +36,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 @ExtendWith(MockitoExtension.class)
 class BudgetServiceImplTests {
 
+  public static final String AUTHENTICATED_USER_NOT_FOUND = "Authenticated user not found";
   @Mock private BudgetRepository budgetRepository;
   @Mock private UserRepository userRepository;
   @Mock private CategoryRepository categoryRepository;
@@ -51,10 +53,6 @@ class BudgetServiceImplTests {
     user = getUser();
     category = getCategory();
     budget = getSavedBudget(createBudgetRequest(category), category, user);
-  }
-
-  private Category getCategory() {
-    return Category.builder().id(1).name("Food").transactionType(TransactionType.EXPENSE).build();
   }
 
   // CREATE
@@ -98,7 +96,7 @@ class BudgetServiceImplTests {
             ResourceNotFoundException.class,
             () -> budgetService.createBudget(request, user.getEmail()));
 
-    assertEquals("Authenticated user not found", exception.getMessage());
+    assertEquals(AUTHENTICATED_USER_NOT_FOUND, exception.getMessage());
     verify(budgetRepository, never()).save(any(Budget.class));
   }
 
@@ -193,11 +191,179 @@ class BudgetServiceImplTests {
         assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> budgetService.getBudgetById(budget.getId(), user.getEmail()));
-    assertEquals("Authenticated user not found", exception.getMessage());
+    assertEquals(AUTHENTICATED_USER_NOT_FOUND, exception.getMessage());
     verify(budgetRepository, never()).save(any(Budget.class));
   }
 
+  //  GET ALL
+  @Test
+  void shouldReturnAllBudgetsForUser() {
+    List<Budget> budgets = createBudgetList(user);
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByUser(user)).thenReturn(budgets);
+    when(transactionRepository.sumExpenseByUserAndCategoryAndMonthAndYear(
+            any(), any(), anyInt(), anyInt()))
+        .thenReturn(ZERO);
+    List<BudgetResponse> allBudgets = budgetService.getAllBudgets(user.getEmail());
+    verify(budgetRepository).findByUser(user);
+    assertEquals(3, allBudgets.size());
+    assertEquals(Month.JULY, allBudgets.getFirst().getMonth());
+    assertEquals(2026, allBudgets.getFirst().getYear());
+  }
+
+  @Test
+  void shouldReturnEmptyListWhenUserHasNoBudgets() {
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByUser(user)).thenReturn(Collections.emptyList());
+    List<BudgetResponse> allBudgets = budgetService.getAllBudgets(user.getEmail());
+    verify(budgetRepository).findByUser(user);
+    assertEquals(0, allBudgets.size());
+  }
+
+  @Test
+  void shouldThrowExceptionWhenUserNotFoundWhileGettingBudgets() {
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class, () -> budgetService.getAllBudgets(user.getEmail()));
+    assertEquals(AUTHENTICATED_USER_NOT_FOUND, exception.getMessage());
+    verify(budgetRepository, never()).findByIdAndUser(any(UUID.class), any(User.class));
+  }
+
+  //  GET BY MONTH
+  @Test
+  void shouldReturnBudgetsForMonthAndYear() {
+    List<Budget> budgets = createBudgetList(user);
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByUserAndMonthAndYear(user, Month.JULY, 2026)).thenReturn(budgets);
+    when(transactionRepository.sumExpenseByUserAndCategoryAndMonthAndYear(
+            any(), any(), anyInt(), anyInt()))
+        .thenReturn(ZERO);
+    List<BudgetResponse> allBudgets =
+        budgetService.getBudgetsByMonth(Month.JULY, 2026, user.getEmail());
+    verify(budgetRepository).findByUserAndMonthAndYear(user, Month.JULY, 2026);
+    assertEquals(3, allBudgets.size());
+    assertEquals(Month.JULY, allBudgets.getFirst().getMonth());
+    assertEquals(2026, allBudgets.getFirst().getYear());
+  }
+
+  @Test
+  void shouldReturnEmptyListWhenNoBudgetsExistForMonth() {
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByUserAndMonthAndYear(any(), any(), anyInt()))
+        .thenReturn(Collections.emptyList());
+    List<BudgetResponse> allBudgets =
+        budgetService.getBudgetsByMonth(Month.JULY, 2026, user.getEmail());
+    assertEquals(0, allBudgets.size());
+    verify(budgetRepository).findByUserAndMonthAndYear(any(), any(), anyInt());
+  }
+
+  @Test
+  void shouldThrowExceptionWhenUserNotFoundWhileGettingBudgetsByMonth() {
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () -> budgetService.getBudgetsByMonth(Month.JULY, 2026, user.getEmail()));
+    assertEquals(AUTHENTICATED_USER_NOT_FOUND, exception.getMessage());
+    verify(budgetRepository, never()).findByIdAndUser(any(UUID.class), any(User.class));
+  }
+
+  //  UPDATE
+  @Test
+  void shouldUpdateBudgetSuccessfully() {
+    UpdateBudgetRequest updateBudgetRequest = new UpdateBudgetRequest(BigDecimal.valueOf(13000));
+    Budget upddatedBudget = getSavedBudget(createBudgetRequest(category), category, user);
+    upddatedBudget.setAmount(updateBudgetRequest.getAmount());
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByIdAndUser(any(UUID.class), any(User.class)))
+        .thenReturn(Optional.of(budget));
+    when(budgetRepository.save(budget)).thenReturn(upddatedBudget);
+    BudgetResponse budgetResponse =
+        budgetService.updateBudget(budget.getId(), updateBudgetRequest, user.getEmail());
+    assertEquals(BigDecimal.valueOf(13000), budgetResponse.getAmount());
+    verify(budgetRepository).save(budgetCaptor.capture());
+    Budget captured = budgetCaptor.getValue();
+    assertEquals(BigDecimal.valueOf(13000), captured.getAmount());
+    verify(budgetRepository).findByIdAndUser(any(UUID.class), any(User.class));
+    verify(budgetRepository).save(budget);
+  }
+
+  @Test
+  void shouldThrowExceptionWhenBudgetNotFoundWhileUpdating() {
+    UpdateBudgetRequest updateBudgetRequest = new UpdateBudgetRequest(BigDecimal.valueOf(13000));
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByIdAndUser(any(UUID.class), any(User.class)))
+        .thenReturn(Optional.empty());
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () ->
+                budgetService.updateBudget(
+                    UUID.randomUUID(), updateBudgetRequest, user.getEmail()));
+    assertEquals("Budget not found", exception.getMessage());
+    verify(budgetRepository).findByIdAndUser(any(UUID.class), any(User.class));
+    verify(budgetRepository, never()).save(any(Budget.class));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenAuthenticatedUserNotFoundWhileUpdating() {
+    UpdateBudgetRequest updateBudgetRequest = new UpdateBudgetRequest(BigDecimal.valueOf(13000));
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () ->
+                budgetService.updateBudget(
+                    UUID.randomUUID(), updateBudgetRequest, user.getEmail()));
+    assertEquals(AUTHENTICATED_USER_NOT_FOUND, exception.getMessage());
+    verify(budgetRepository, never()).findByIdAndUser(any(UUID.class), any(User.class));
+    verify(budgetRepository, never()).save(any(Budget.class));
+  }
+
+  //  DELETE
+  @Test
+  void shouldDeleteBudgetSuccessfully() {
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByIdAndUser(any(UUID.class), any(User.class)))
+        .thenReturn(Optional.of(budget));
+    budgetService.deleteBudget(budget.getId(), user.getEmail());
+
+    verify(budgetRepository).findByIdAndUser(any(UUID.class), any(User.class));
+    verify(budgetRepository).delete(budget);
+  }
+
+  @Test
+  void shouldThrowExceptionWhenBudgetNotFoundWhileDeleting() {
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.of(user));
+    when(budgetRepository.findByIdAndUser(any(UUID.class), any(User.class)))
+        .thenReturn(Optional.empty());
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () -> budgetService.deleteBudget(UUID.randomUUID(), user.getEmail()));
+    assertEquals("Budget not found", exception.getMessage());
+    verify(budgetRepository).findByIdAndUser(any(UUID.class), any(User.class));
+    verify(budgetRepository, never()).delete(any(Budget.class));
+  }
+
+  @Test
+  void shouldThrowExceptionWhenAuthenticatedUserNotFoundWhileDeleting() {
+    when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
+    ResourceNotFoundException exception =
+        assertThrowsExactly(
+            ResourceNotFoundException.class,
+            () -> budgetService.deleteBudget(UUID.randomUUID(), user.getEmail()));
+    assertEquals(AUTHENTICATED_USER_NOT_FOUND, exception.getMessage());
+    verify(budgetRepository, never()).findByIdAndUser(any(UUID.class), any(User.class));
+    verify(budgetRepository, never()).delete(any(Budget.class));
+  }
+
   // Helper Methods
+  private Category getCategory() {
+    return Category.builder().id(1).name("Food").transactionType(TransactionType.EXPENSE).build();
+  }
+
   private Budget getSavedBudget(CreateBudgetRequest request, Category category, User user) {
     LocalDateTime createdAt = LocalDateTime.of(2026, Month.JULY, 30, 17, 53, 0);
     return Budget.builder()
@@ -232,5 +398,32 @@ class BudgetServiceImplTests {
         .updatedAt(LocalDateTime.now())
         .enabled(true)
         .build();
+  }
+
+  private List<Budget> createBudgetList(User user) {
+    List<Budget> budgets = new ArrayList<>();
+    Budget budget1 = getSavedBudget(createBudgetRequest(category), category, user);
+    Budget budget2 =
+        Budget.builder()
+            .id(UUID.randomUUID())
+            .user(user)
+            .category(new Category(2, "Travel", "description", TransactionType.EXPENSE))
+            .month(budget1.getMonth())
+            .year(budget1.getYear())
+            .amount(BigDecimal.valueOf(30000))
+            .build();
+    Budget budget3 =
+        Budget.builder()
+            .id(UUID.randomUUID())
+            .user(user)
+            .category(new Category(2, "Groceries", "description", TransactionType.EXPENSE))
+            .month(budget1.getMonth())
+            .year(budget1.getYear())
+            .amount(BigDecimal.valueOf(20000))
+            .build();
+    budgets.add(budget1);
+    budgets.add(budget2);
+    budgets.add(budget3);
+    return budgets;
   }
 }

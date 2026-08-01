@@ -7,7 +7,6 @@ import com.vinay.moneymanager.budget.entity.Budget;
 import com.vinay.moneymanager.budget.repository.BudgetRepository;
 import com.vinay.moneymanager.budget.service.BudgetService;
 import com.vinay.moneymanager.common.exception.DuplicateResourceException;
-import com.vinay.moneymanager.common.exception.FeatureNotImplementedException;
 import com.vinay.moneymanager.common.exception.InvalidRequestException;
 import com.vinay.moneymanager.common.exception.ResourceNotFoundException;
 import com.vinay.moneymanager.transaction.entity.Category;
@@ -18,8 +17,8 @@ import com.vinay.moneymanager.user.entity.User;
 import com.vinay.moneymanager.user.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.Month;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -28,6 +27,7 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BudgetServiceImpl implements BudgetService {
 
+  public static final String BUDGET_NOT_FOUND = "Budget not found";
   private final BudgetRepository budgetRepository;
   private final UserRepository userRepository;
   private final CategoryRepository categoryRepository;
@@ -37,16 +37,11 @@ public class BudgetServiceImpl implements BudgetService {
   public BudgetResponse createBudget(CreateBudgetRequest request, String userEmail) {
     User user = getAuthenticatedUser(userEmail);
     Category category = getCategory(request.getCategoryId());
-
     validateExpenseCategory(category);
     validateDuplicateBudget(user, category, request);
-
     Budget budget = mapToBudget(request, user, category);
     Budget savedBudget = budgetRepository.save(budget);
-    BigDecimal spentAmount = fetchSpentAmount(user, savedBudget);
-    BigDecimal remainingAmount = savedBudget.getAmount().subtract(spentAmount);
-
-    return mapToBudgetResponse(savedBudget, spentAmount, remainingAmount);
+    return mapToBudgetResponse(savedBudget, user);
   }
 
   @Override
@@ -55,36 +50,44 @@ public class BudgetServiceImpl implements BudgetService {
     Budget budget =
         budgetRepository
             .findByIdAndUser(budgetId, user)
-            .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
-
-    BigDecimal spentAmount = fetchSpentAmount(user, budget);
-    BigDecimal remainingAmount = budget.getAmount().subtract(spentAmount);
-    return mapToBudgetResponse(budget, spentAmount, remainingAmount);
+            .orElseThrow(() -> new ResourceNotFoundException(BUDGET_NOT_FOUND));
+    return mapToBudgetResponse(budget, user);
   }
 
   @Override
   public List<BudgetResponse> getAllBudgets(String userEmail) {
     User user = getAuthenticatedUser(userEmail);
-
     List<Budget> budgets = budgetRepository.findByUser(user);
-    if (budgets.isEmpty()) throw new ResourceNotFoundException("No budgets found");
-
-    return mapToListOfBudgetResponse(budgets, user);
+    return mapToBudgetResponses(budgets, user);
   }
 
   @Override
   public List<BudgetResponse> getBudgetsByMonth(Month month, Integer year, String userEmail) {
-    throw new FeatureNotImplementedException("Feature not Implemented");
+    User user = getAuthenticatedUser(userEmail);
+    List<Budget> budgets = budgetRepository.findByUserAndMonthAndYear(user, month, year);
+    return mapToBudgetResponses(budgets, user);
   }
 
   @Override
   public BudgetResponse updateBudget(UUID budgetId, UpdateBudgetRequest request, String userEmail) {
-    throw new FeatureNotImplementedException("Feature not Implemented");
+    User user = getAuthenticatedUser(userEmail);
+    Budget budget =
+        budgetRepository
+            .findByIdAndUser(budgetId, user)
+            .orElseThrow(() -> new ResourceNotFoundException(BUDGET_NOT_FOUND));
+    budget.setAmount(request.getAmount());
+    Budget updatedBudget = budgetRepository.save(budget);
+    return mapToBudgetResponse(updatedBudget, user);
   }
 
   @Override
   public void deleteBudget(UUID budgetId, String userEmail) {
-    throw new FeatureNotImplementedException("Feature not Implemented");
+    User user = getAuthenticatedUser(userEmail);
+    Budget budget =
+        budgetRepository
+            .findByIdAndUser(budgetId, user)
+            .orElseThrow(() -> new ResourceNotFoundException(BUDGET_NOT_FOUND));
+    budgetRepository.delete(budget);
   }
 
   private void validateExpenseCategory(Category category) {
@@ -103,45 +106,40 @@ public class BudgetServiceImpl implements BudgetService {
             });
   }
 
-  private BudgetResponse mapToBudgetResponse(
-      Budget savedBudget, BigDecimal spentAmount, BigDecimal remainingAmount) {
-
+  private BudgetResponse mapToBudgetResponse(Budget budget, User user) {
+    BigDecimal spentAmount = fetchSpentAmount(budget, user);
+    BigDecimal remainingAmount = budget.getAmount().subtract(spentAmount);
     return BudgetResponse.builder()
-        .id(savedBudget.getId())
-        .categoryName(savedBudget.getCategory().getName())
-        .amount(savedBudget.getAmount())
-        .month(savedBudget.getMonth())
-        .year(savedBudget.getYear())
+        .id(budget.getId())
+        .categoryName(budget.getCategory().getName())
+        .amount(budget.getAmount())
+        .month(budget.getMonth())
+        .year(budget.getYear())
         .remainingAmount(remainingAmount)
         .spentAmount(spentAmount)
-        .updatedAt(savedBudget.getUpdatedAt())
-        .createdAt(savedBudget.getCreatedAt())
+        .updatedAt(budget.getUpdatedAt())
+        .createdAt(budget.getCreatedAt())
         .build();
   }
 
-  private List<BudgetResponse> mapToListOfBudgetResponse(List<Budget> budgets, User user) {
-    List<BudgetResponse> budgetResponseList = new ArrayList<>();
-    for (Budget budget : budgets) {
-      BigDecimal spentAmount = fetchSpentAmount(user, budget);
-      BigDecimal remainingAmount = budget.getAmount().subtract(spentAmount);
-      budgetResponseList.add(mapToBudgetResponse(budget, spentAmount, remainingAmount));
-    }
-    return budgetResponseList;
+  private List<BudgetResponse> mapToBudgetResponses(List<Budget> budgets, User user) {
+    return budgets.stream().map(budget -> mapToBudgetResponse(budget, user)).toList();
   }
 
-  private BigDecimal fetchSpentAmount(User user, Budget savedBudget) {
-    return transactionRepository.sumExpenseByUserAndCategoryAndMonthAndYear(
-        user, savedBudget.getCategory(), savedBudget.getMonth().getValue(), savedBudget.getYear());
+  private BigDecimal fetchSpentAmount(Budget budget, User user) {
+    return Optional.ofNullable(
+            transactionRepository.sumExpenseByUserAndCategoryAndMonthAndYear(
+                user, budget.getCategory(), budget.getMonth().getValue(), budget.getYear()))
+        .orElse(BigDecimal.ZERO);
   }
 
-  private Budget mapToBudget(
-      CreateBudgetRequest request, User authenticatedUser, Category category) {
+  private Budget mapToBudget(CreateBudgetRequest request, User user, Category category) {
     return Budget.builder()
         .amount(request.getAmount())
         .month(request.getMonth())
         .year(request.getYear())
         .category(category)
-        .user(authenticatedUser)
+        .user(user)
         .build();
   }
 
