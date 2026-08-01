@@ -18,6 +18,7 @@ import com.vinay.moneymanager.user.entity.User;
 import com.vinay.moneymanager.user.repository.UserRepository;
 import java.math.BigDecimal;
 import java.time.Month;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
@@ -42,8 +43,10 @@ public class BudgetServiceImpl implements BudgetService {
 
     Budget budget = mapToBudget(request, user, category);
     Budget savedBudget = budgetRepository.save(budget);
+    BigDecimal spentAmount = fetchSpentAmount(user, savedBudget);
+    BigDecimal remainingAmount = savedBudget.getAmount().subtract(spentAmount);
 
-    return mapToBudgetResponse(user, savedBudget);
+    return mapToBudgetResponse(savedBudget, spentAmount, remainingAmount);
   }
 
   @Override
@@ -53,17 +56,25 @@ public class BudgetServiceImpl implements BudgetService {
         budgetRepository
             .findByIdAndUser(budgetId, user)
             .orElseThrow(() -> new ResourceNotFoundException("Budget not found"));
-    return mapToBudgetResponse(user, budget);
+
+    BigDecimal spentAmount = fetchSpentAmount(user, budget);
+    BigDecimal remainingAmount = budget.getAmount().subtract(spentAmount);
+    return mapToBudgetResponse(budget, spentAmount, remainingAmount);
   }
 
   @Override
   public List<BudgetResponse> getAllBudgets(String userEmail) {
-    return List.of();
+    User user = getAuthenticatedUser(userEmail);
+
+    List<Budget> budgets = budgetRepository.findByUser(user);
+    if (budgets.isEmpty()) throw new ResourceNotFoundException("No budgets found");
+
+    return mapToListOfBudgetResponse(budgets, user);
   }
 
   @Override
   public List<BudgetResponse> getBudgetsByMonth(Month month, Integer year, String userEmail) {
-    return List.of();
+    throw new FeatureNotImplementedException("Feature not Implemented");
   }
 
   @Override
@@ -92,14 +103,9 @@ public class BudgetServiceImpl implements BudgetService {
             });
   }
 
-  private BudgetResponse mapToBudgetResponse(User user, Budget savedBudget) {
-    BigDecimal spentAmount =
-        transactionRepository.sumExpenseByUserAndCategoryAndMonthAndYear(
-            user,
-            savedBudget.getCategory(),
-            savedBudget.getMonth().getValue(),
-            savedBudget.getYear());
-    BigDecimal remainingAmount = savedBudget.getAmount().subtract(spentAmount);
+  private BudgetResponse mapToBudgetResponse(
+      Budget savedBudget, BigDecimal spentAmount, BigDecimal remainingAmount) {
+
     return BudgetResponse.builder()
         .id(savedBudget.getId())
         .categoryName(savedBudget.getCategory().getName())
@@ -111,6 +117,21 @@ public class BudgetServiceImpl implements BudgetService {
         .updatedAt(savedBudget.getUpdatedAt())
         .createdAt(savedBudget.getCreatedAt())
         .build();
+  }
+
+  private List<BudgetResponse> mapToListOfBudgetResponse(List<Budget> budgets, User user) {
+    List<BudgetResponse> budgetResponseList = new ArrayList<>();
+    for (Budget budget : budgets) {
+      BigDecimal spentAmount = fetchSpentAmount(user, budget);
+      BigDecimal remainingAmount = budget.getAmount().subtract(spentAmount);
+      budgetResponseList.add(mapToBudgetResponse(budget, spentAmount, remainingAmount));
+    }
+    return budgetResponseList;
+  }
+
+  private BigDecimal fetchSpentAmount(User user, Budget savedBudget) {
+    return transactionRepository.sumExpenseByUserAndCategoryAndMonthAndYear(
+        user, savedBudget.getCategory(), savedBudget.getMonth().getValue(), savedBudget.getYear());
   }
 
   private Budget mapToBudget(
