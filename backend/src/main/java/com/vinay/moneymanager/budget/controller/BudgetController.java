@@ -84,6 +84,6 @@ public class BudgetController {
   }
 
   private String getUsernameFromAuthentication(Authentication authentication) {
-    return authentication.getPrincipal().toString();
+    return authentication.getName();
   }
 }
