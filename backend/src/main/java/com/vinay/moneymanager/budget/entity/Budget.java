@@ -25,7 +25,7 @@ import org.hibernate.annotations.UuidGenerator;
     uniqueConstraints = {
       @UniqueConstraint(
           name = "uk_budget_user_category_month_year",
-          columnNames = {"user_id", "category_id", "month", "year"})
+          columnNames = {"user_id", "category_id", "budget_month", "budget_year"})
     })
 public class Budget {
 
@@ -36,13 +36,11 @@ public class Budget {
   @DecimalMin(value = "0.01")
   private BigDecimal amount;
 
-  @NotNull
+  @Column(name = "budget_month", nullable = false)
   @Enumerated(EnumType.STRING)
-  @Column(nullable = false)
   private Month month;
 
-  @NotNull
-  @Column(nullable = false)
+  @Column(name = "budget_year", nullable = false)
   private Integer year;
 
   @NotNull
