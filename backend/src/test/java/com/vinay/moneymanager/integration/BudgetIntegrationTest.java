@@ -87,7 +87,12 @@ class BudgetIntegrationTest {
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.success").value(true))
         .andExpect(jsonPath("$.message").value("Budget added successfully"))
-        .andExpect(jsonPath("$.data.categoryName").value(foodCategory.getName()));
+        .andExpect(jsonPath("$.data.categoryName").value(foodCategory.getName()))
+        .andExpect(jsonPath("$.data.amount").value(10000))
+        .andExpect(jsonPath("$.data.month").value("AUGUST"))
+        .andExpect(jsonPath("$.data.year").value(2026))
+        .andExpect(jsonPath("$.data.spentAmount").value(0))
+        .andExpect(jsonPath("$.data.remainingAmount").value(10000));
   }
 
   @Test
