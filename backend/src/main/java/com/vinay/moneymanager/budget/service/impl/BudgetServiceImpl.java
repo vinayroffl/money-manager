@@ -117,8 +117,6 @@ public class BudgetServiceImpl implements BudgetService {
         .year(budget.getYear())
         .remainingAmount(remainingAmount)
         .spentAmount(spentAmount)
-        .updatedAt(budget.getUpdatedAt())
-        .createdAt(budget.getCreatedAt())
         .build();
   }
 

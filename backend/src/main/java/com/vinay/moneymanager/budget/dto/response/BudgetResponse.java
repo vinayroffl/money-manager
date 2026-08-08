@@ -1,7 +1,6 @@
 package com.vinay.moneymanager.budget.dto.response;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.time.Month;
 import java.util.UUID;
 import lombok.*;
@@ -19,6 +18,4 @@ public class BudgetResponse {
   private BigDecimal remainingAmount;
   private Month month;
   private Integer year;
-  private LocalDateTime createdAt;
-  private LocalDateTime updatedAt;
 }
