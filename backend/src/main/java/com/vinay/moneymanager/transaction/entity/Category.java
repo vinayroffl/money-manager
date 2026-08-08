@@ -26,4 +26,7 @@ public class Category {
   @NotBlank
   @Column(nullable = false)
   private String description;
+
+  @Enumerated(EnumType.STRING)
+  private TransactionType transactionType;
 }
