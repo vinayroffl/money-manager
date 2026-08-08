@@ -15,7 +15,6 @@ import com.vinay.moneymanager.transaction.entity.TransactionType;
 import com.vinay.moneymanager.transaction.repository.CategoryRepository;
 import com.vinay.moneymanager.user.dto.request.LoginRequest;
 import com.vinay.moneymanager.user.dto.request.RegisterRequest;
-import jakarta.annotation.Nonnull;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Month;
@@ -390,7 +389,6 @@ class BudgetIntegrationTest {
         .build();
   }
 
-  @Nonnull
   private ResultActions performAuthenticatedPost(Object payload, String jwtToken) throws Exception {
     return mockMvc.perform(
         post(BudgetIntegrationTest.BUDGETS_CONTEXT_PATH)

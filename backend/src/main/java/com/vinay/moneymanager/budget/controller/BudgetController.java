@@ -37,7 +37,7 @@ public class BudgetController {
     String email = getUsernameFromAuthentication(authentication);
     var budgetResponse = budgetService.getBudgetById(budgetId, email);
     var apiResponse = buildSuccessResponse(budgetResponse, "Budget retrieved successfully");
-    return ResponseEntity.ok().body(apiResponse);
+    return ResponseEntity.ok(apiResponse);
   }
 
   @GetMapping
@@ -46,7 +46,7 @@ public class BudgetController {
     String email = getUsernameFromAuthentication(authentication);
     var budgetResponse = budgetService.getAllBudgets(email);
     var apiResponse = buildSuccessResponse(budgetResponse, "Budgets retrieved successfully");
-    return ResponseEntity.ok().body(apiResponse);
+    return ResponseEntity.ok(apiResponse);
   }
 
   @GetMapping("/monthly")
@@ -56,7 +56,7 @@ public class BudgetController {
     var budgetResponse = budgetService.getBudgetsByMonth(month, year, email);
     var apiResponse =
         buildSuccessResponse(budgetResponse, "Monthly budgets retrieved successfully");
-    return ResponseEntity.ok().body(apiResponse);
+    return ResponseEntity.ok(apiResponse);
   }
 
   @PutMapping("/{budgetId}")
@@ -67,7 +67,7 @@ public class BudgetController {
     String email = getUsernameFromAuthentication(authentication);
     var updatedBudget = budgetService.updateBudget(budgetId, request, email);
     var apiResponse = buildSuccessResponse(updatedBudget, "Budget updated successfully");
-    return ResponseEntity.ok().body(apiResponse);
+    return ResponseEntity.ok(apiResponse);
   }
 
   @DeleteMapping("/{budgetId}")
@@ -76,7 +76,7 @@ public class BudgetController {
     String email = getUsernameFromAuthentication(authentication);
     budgetService.deleteBudget(budgetId, email);
     var apiResponse = buildSuccessResponse(null, "Budget deleted successfully");
-    return ResponseEntity.ok().body(apiResponse);
+    return ResponseEntity.ok(apiResponse);
   }
 
   private <T> ApiResponse<T> buildSuccessResponse(T data, String message) {

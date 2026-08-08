@@ -22,7 +22,7 @@ public class CreateBudgetRequest {
   @NotNull private Month month;
 
   @NotNull
-  @Min(2026)
-  @Max(2999)
+  @Min(1900)
+  @Max(9999)
   private Integer year;
 }

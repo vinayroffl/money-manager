@@ -182,8 +182,6 @@ class BudgetControllerTests {
     BudgetResponse budgetResponse = getBudgetResponse(request, travel);
     UpdateBudgetRequest updateBudgetRequest = new UpdateBudgetRequest(BigDecimal.valueOf(20000));
     updateBudgetRequest.setAmount(BigDecimal.valueOf(-1));
-    when(budgetService.updateBudget(any(UUID.class), any(UpdateBudgetRequest.class), anyString()))
-        .thenThrow(new ResourceNotFoundException("Budget not found"));
     mockMvc
         .perform(
             put("/api/budgets/" + budgetResponse.getId())
