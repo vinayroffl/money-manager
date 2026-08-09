@@ -1,9 +1,11 @@
-import "./App.css";
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./routes/AppRoutes";
 function App() {
   return (
     <div>
-      <h1>Money Manager</h1>
-      <p>Manage your finances simply.</p>
+      <BrowserRouter>
+        <AppRoutes />
+      </BrowserRouter>
     </div>
   );
 }
