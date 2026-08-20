@@ -22,7 +22,13 @@ async function apiClient(
   });
 
   if (!response.ok) {
-    throw new ApiError(response.status, response.statusText);
+    const errorData = await response.json();
+
+    throw new ApiError(
+      response.status,
+      errorData.message,
+      errorData.errors ?? [],
+    );
   }
 
   return response;

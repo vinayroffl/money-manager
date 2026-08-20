@@ -18,10 +18,6 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (request: LoginRequest): Promise<void> => {
     const response = await loginApi(request);
-
-    console.log("AuthContext login response:", response);
-    console.log("Login successful:", response.success);
-
     if (response.success) {
       localStorage.setItem("token", response.data.token);
       setIsAuthenticated(true);
@@ -33,12 +29,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const register = async (request: RegisterRequest): Promise<void> => {
-    const response = await registerApi(request);
-    console.log("AuthContext register response:", response);
-    console.log("Register successful:", response.success);
-    if (response.success) {
-      setIsAuthenticated(false);
-    }
+    await registerApi(request);
   };
 
   return (

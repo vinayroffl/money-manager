@@ -14,13 +14,7 @@ async function login(
     method: "POST",
     body: JSON.stringify(request),
   });
-
-  if (!response.ok) {
-    console.log("HTTP error:", response.status);
-  }
-
   const data = await response.json();
-
   return data;
 }
 
@@ -31,13 +25,7 @@ async function register(
     method: "POST",
     body: JSON.stringify(request),
   });
-
-  if (!response.ok) {
-    console.log("HTTP error:", response.status);
-  }
-
   const data = await response.json();
-
   return data;
 }
 
