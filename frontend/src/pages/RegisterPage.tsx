@@ -1,7 +1,8 @@
 import { useState } from "react";
 import useAuth from "../context/useAuth";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import ApiError from "../api/ApiError";
+import AuthLayout from "../components/AuthLayout";
 
 function RegisterPage() {
   const [email, setEmail] = useState("");
@@ -33,34 +34,67 @@ function RegisterPage() {
     }
   };
   return (
-    <div>
-      <h1>Register</h1>
-      <p>Register page</p>
-      {errorMessage && <p>{errorMessage}</p>}
-      <input
-        type="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-      />
-      <input
-        type="text"
-        value={firstName}
-        onChange={(event) => setFirstName(event.target.value)}
-      />
-      <input
-        type="text"
-        value={lastName}
-        onChange={(event) => setLastName(event.target.value)}
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-      />
-      <button type="button" onClick={handleRegister}>
-        register
-      </button>
-    </div>
+    <AuthLayout
+      title="Create your account"
+      subtitle="Start managing your finances today"
+    >
+      <form
+        className="auth-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleRegister();
+        }}
+      >
+        {errorMessage && <div className="auth-error">{errorMessage}</div>}
+
+        <div className="form-field">
+          <label htmlFor="email">Email</label>
+
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="firstName">First Name</label>
+          <input
+            id="firstName"
+            type="text"
+            value={firstName}
+            onChange={(event) => setFirstName(event.target.value)}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="lastName">Last Name</label>
+          <input
+            id="lastName"
+            type="text"
+            value={lastName}
+            onChange={(event) => setLastName(event.target.value)}
+          />
+        </div>
+        <div className="form-field">
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+        </div>
+        <button className="auth-button" type="submit">
+          Register
+        </button>
+
+        <p className="auth-footer">
+          Already have an account? <Link to="/login">Login</Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }
 

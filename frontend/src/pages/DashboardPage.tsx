@@ -1,18 +1,18 @@
+import AppLayout from "../components/AppLayout";
 import useAuth from "../context/useAuth";
 
 function DashboardPage() {
   const { isAuthenticated, logout } = useAuth();
 
-  console.log("Dashboard authentication:", isAuthenticated);
-
   return (
-    <div>
-      <h1>Dashboard</h1>
+    <AppLayout>
+      <h2>Dashboard</h2>
       <p>Authenticated: {isAuthenticated ? "Yes" : "No"}</p>
+
       <button type="button" onClick={logout}>
         Logout
       </button>
-    </div>
+    </AppLayout>
   );
 }
 

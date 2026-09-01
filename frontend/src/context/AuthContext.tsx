@@ -7,6 +7,7 @@ interface AuthContextType {
   login: (request: LoginRequest) => Promise<void>;
   logout: () => void;
   register: (request: RegisterRequest) => Promise<void>;
+  handleUnauthorized: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -32,8 +33,15 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     await registerApi(request);
   };
 
+  const handleUnauthorized = (): void => {
+    localStorage.removeItem("token");
+    setIsAuthenticated(false);
+  };
+
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout, register }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, login, logout, register, handleUnauthorized }}
+    >
       {children}
     </AuthContext.Provider>
   );

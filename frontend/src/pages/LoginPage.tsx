@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import useAuth from "../context/useAuth";
 import ApiError from "../api/ApiError";
+import AuthLayout from "../components/AuthLayout";
 
 function LoginPage() {
   const [email, setEmail] = useState("");
@@ -30,24 +31,49 @@ function LoginPage() {
     }
   };
   return (
-    <div>
-      <h1>Login</h1>
-      <p>Login page</p>
-      {errorMessage && <p>{errorMessage}</p>}
-      <input
-        type="email"
-        value={email}
-        onChange={(event) => setEmail(event.target.value)}
-      />
-      <input
-        type="password"
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-      />
-      <button type="button" onClick={handleLogin}>
-        Login
-      </button>
-    </div>
+    <AuthLayout title="Welcome back" subtitle="Sign in to manage your finances">
+      <form
+        className="auth-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleLogin();
+        }}
+      >
+        {errorMessage && <div className="auth-error">{errorMessage}</div>}
+
+        <div className="form-field">
+          <label htmlFor="email">Email</label>
+
+          <input
+            id="email"
+            type="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            required
+          />
+        </div>
+
+        <div className="form-field">
+          <label htmlFor="password">Password</label>
+
+          <input
+            id="password"
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            required
+          />
+        </div>
+
+        <button className="auth-button" type="submit">
+          Login
+        </button>
+
+        <p className="auth-footer">
+          Don't have an account? <Link to="/register">Register</Link>
+        </p>
+      </form>
+    </AuthLayout>
   );
 }
 

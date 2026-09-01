@@ -3,6 +3,7 @@ import LoginPage from "../pages/LoginPage";
 import RegisterPage from "../pages/RegisterPage";
 import DashboardPage from "../pages/DashboardPage";
 import ProtectedRoute from "./ProtectedRoute";
+import TransactionsPage from "../pages/TransactionsPage";
 
 function AppRoutes() {
   return (
@@ -17,6 +18,14 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route
+        path="/transactions"
+        element={
+          <ProtectedRoute>
+            <TransactionsPage />
+          </ProtectedRoute>
+        }
+      ></Route>
     </Routes>
   );
 }
