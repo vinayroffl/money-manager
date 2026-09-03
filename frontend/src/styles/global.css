@@ -1,5 +1,7 @@
 @import "./auth.css";
 @import "./app.css";
+@import "./transaction.css";
+
 :root {
   font-family:
     Inter,

@@ -46,15 +46,56 @@ function TransactionsPage() {
           <p>No transactions yet.</p>
         )}
 
-        {!isLoading && transactions.length > 0 && (
-          <p>
-            You have {transactions.length} transaction
-            {transactions.length === 1 ? "" : "s"}.
-          </p>
+        {!isLoading && transactions.length >= 0 && (
+          <table className="transactions-table">
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Type</th>
+                <th>Category</th>
+                <th>Description</th>
+                <th className="amount-column">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {transactions.map((transaction) => (
+                <tr key={transaction.id}>
+                  <td>{formatTransactionDate(transaction.transactionDate)}</td>
+                  <td
+                    className={`transaction-type ${transaction.type.toLowerCase()}`}
+                  >
+                    {transaction.type === "INCOME" ? "Income" : "Expense"}
+                  </td>
+                  <td>{transaction.categoryName}</td>
+                  <td>{transaction.description}</td>
+                  <td className="amount-column">
+                    {formatTransactionAmount(transaction.amount)}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         )}
       </div>
     </AppLayout>
   );
 }
+function formatTransactionDate(date?: string) {
+  if (!date) {
+    return "-";
+  }
 
+  return new Date(date).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
+}
+
+function formatTransactionAmount(amount: number) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+  }).format(amount);
+}
 export default TransactionsPage;
