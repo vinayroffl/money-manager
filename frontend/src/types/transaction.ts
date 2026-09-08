@@ -20,4 +20,16 @@ interface TransactionResponse {
   updatedAt: string;
 }
 
-export type { TransactionType, TransactionRequest, TransactionResponse };
+type CategoryResponse = {
+  id: number;
+  name: string;
+  description: string;
+  transactionType: TransactionType;
+};
+
+export type {
+  TransactionType,
+  TransactionRequest,
+  TransactionResponse,
+  CategoryResponse,
+};
