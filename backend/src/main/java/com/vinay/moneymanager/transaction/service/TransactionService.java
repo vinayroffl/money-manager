@@ -1,6 +1,7 @@
 package com.vinay.moneymanager.transaction.service;
 
 import com.vinay.moneymanager.transaction.dto.request.TransactionRequest;
+import com.vinay.moneymanager.transaction.dto.response.CategoryResponse;
 import com.vinay.moneymanager.transaction.dto.response.TransactionResponse;
 import com.vinay.moneymanager.transaction.entity.TransactionType;
 import java.util.List;
@@ -22,4 +23,6 @@ public interface TransactionService {
   List<TransactionResponse> getTransactionsByCategory(String email, Integer categoryId);
 
   List<TransactionResponse> getTransactionsByType(String email, TransactionType type);
+
+  List<CategoryResponse> getCategories();
 }

@@ -2,6 +2,7 @@ package com.vinay.moneymanager.transaction.service.impl;
 
 import com.vinay.moneymanager.common.exception.ResourceNotFoundException;
 import com.vinay.moneymanager.transaction.dto.request.TransactionRequest;
+import com.vinay.moneymanager.transaction.dto.response.CategoryResponse;
 import com.vinay.moneymanager.transaction.dto.response.TransactionResponse;
 import com.vinay.moneymanager.transaction.entity.Category;
 import com.vinay.moneymanager.transaction.entity.Transaction;
@@ -118,6 +119,12 @@ public class TransactionServiceImpl implements TransactionService {
     return mapToResponseList(transactions);
   }
 
+  @Override
+  public List<CategoryResponse> getCategories() {
+    List<Category> categories = categoryRepository.findAll();
+    return categories.stream().map(this::mapToCategoryResponse).toList();
+  }
+
   @NonNull
   private User getAuthenticatedUser(String email) {
     return userRepository
@@ -160,5 +167,14 @@ public class TransactionServiceImpl implements TransactionService {
 
   private List<TransactionResponse> mapToResponseList(List<Transaction> transactions) {
     return transactions.stream().map(this::mapToResponse).toList();
+  }
+
+  private CategoryResponse mapToCategoryResponse(Category category) {
+    return CategoryResponse.builder()
+        .id(category.getId())
+        .name(category.getName())
+        .description(category.getDescription())
+        .transactionType(category.getTransactionType())
+        .build();
   }
 }

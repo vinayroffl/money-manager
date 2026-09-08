@@ -2,6 +2,7 @@ package com.vinay.moneymanager.transaction.controller;
 
 import com.vinay.moneymanager.common.response.ApiResponse;
 import com.vinay.moneymanager.transaction.dto.request.TransactionRequest;
+import com.vinay.moneymanager.transaction.dto.response.CategoryResponse;
 import com.vinay.moneymanager.transaction.dto.response.TransactionResponse;
 import com.vinay.moneymanager.transaction.entity.TransactionType;
 import com.vinay.moneymanager.transaction.service.TransactionService;
@@ -94,6 +95,13 @@ public class TransactionController {
     var transactionsByType = transactionService.getTransactionsByType(email, type);
     var apiResponse = buildSuccessResponse(transactionsByType, "Transactions fetched successfully");
     return ResponseEntity.status(HttpStatus.OK).body(apiResponse);
+  }
+
+  @GetMapping("/categories")
+  public ResponseEntity<ApiResponse<List<CategoryResponse>>> getListOfCategories() {
+    var categories = transactionService.getCategories();
+    var apiResponse = buildSuccessResponse(categories, "Categories fetched successfully");
+    return ResponseEntity.ok(apiResponse);
   }
 
   private <T> ApiResponse<T> buildSuccessResponse(T data, String message) {
