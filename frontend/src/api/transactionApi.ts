@@ -35,4 +35,29 @@ async function createTransaction(
   const data: ApiResponse<TransactionResponse> = await response.json();
   return data;
 }
-export { getCategories, getTransactions, createTransaction };
+async function updateTransaction(
+  id: string,
+  request: TransactionRequest,
+): Promise<ApiResponse<TransactionResponse>> {
+  const response = await apiClient(`/api/transactions/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(request),
+  });
+
+  const data: ApiResponse<TransactionResponse> = await response.json();
+  return data;
+}
+
+async function deleteTransaction(id: string): Promise<void> {
+  await apiClient(`/api/transactions/${id}`, {
+    method: "DELETE",
+  });
+}
+
+export {
+  getTransactions,
+  getCategories,
+  createTransaction,
+  updateTransaction,
+  deleteTransaction,
+};

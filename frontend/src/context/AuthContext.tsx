@@ -1,16 +1,7 @@
-import React, { createContext, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { login as loginApi, register as registerApi } from "../api/authApi";
 import type { LoginRequest, RegisterRequest } from "../types/auth";
-
-interface AuthContextType {
-  isAuthenticated: boolean;
-  login: (request: LoginRequest) => Promise<void>;
-  logout: () => void;
-  register: (request: RegisterRequest) => Promise<void>;
-  handleUnauthorized: () => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from "./authContextValue";
 
 function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(
@@ -19,10 +10,13 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = async (request: LoginRequest): Promise<void> => {
     const response = await loginApi(request);
-    if (response.success) {
-      localStorage.setItem("token", response.data.token);
-      setIsAuthenticated(true);
+
+    if (!response.success || !response.data?.token) {
+      throw new Error(response.message || "Login failed");
     }
+
+    localStorage.setItem("token", response.data.token);
+    setIsAuthenticated(true);
   };
   const logout = (): void => {
     localStorage.removeItem("token");
@@ -33,10 +27,18 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
     await registerApi(request);
   };
 
-  const handleUnauthorized = (): void => {
+  const handleUnauthorized = useCallback((): void => {
     localStorage.removeItem("token");
     setIsAuthenticated(false);
-  };
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("auth:unauthorized", handleUnauthorized);
+
+    return () => {
+      window.removeEventListener("auth:unauthorized", handleUnauthorized);
+    };
+  }, [handleUnauthorized]);
 
   return (
     <AuthContext.Provider
@@ -47,4 +49,4 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-export { AuthContext, AuthProvider };
+export { AuthProvider };

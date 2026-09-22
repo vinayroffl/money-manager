@@ -1,9 +1,13 @@
 import { useEffect, useState } from "react";
 import AppLayout from "../components/AppLayout";
 import TransactionForm from "../components/TransactionForm";
-import { getTransactions } from "../api/transactionApi";
-import type { TransactionResponse } from "../types/transaction";
+import { getTransactions, deleteTransaction } from "../api/transactionApi";
+import type {
+  TransactionResponse,
+  TransactionType,
+} from "../types/transaction";
 import ApiError from "../api/ApiError";
+import { ChevronDown, Pencil, Trash2 } from "lucide-react";
 
 function formatTransactionDate(date?: string) {
   if (!date) {
@@ -30,12 +34,20 @@ function TransactionsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<TransactionResponse | null>(null);
+  const [transactionToDelete, setTransactionToDelete] =
+    useState<TransactionResponse | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("ALL");
+  const [selectedType, setSelectedType] = useState<"ALL" | TransactionType>(
+    "ALL",
+  );
+  const [filterMenuOpen, setFilterMenuOpen] = useState<
+    "type" | "category" | null
+  >(null);
 
   const loadTransactions = async () => {
     try {
-      setIsLoading(true);
-      setErrorMessage("");
-
       const response = await getTransactions();
 
       if (response.success) {
@@ -59,8 +71,99 @@ function TransactionsPage() {
   };
 
   useEffect(() => {
-    void loadTransactions();
+    let ignore = false;
+
+    const fetchInitialTransactions = async () => {
+      try {
+        const response = await getTransactions();
+
+        if (ignore) {
+          return;
+        }
+
+        if (!response.success) {
+          setErrorMessage(response.message || "Unable to load transactions.");
+          return;
+        }
+
+        const sortedTransactions = [...response.data].sort(
+          (a, b) =>
+            new Date(b.transactionDate ?? b.createdAt).getTime() -
+            new Date(a.transactionDate ?? a.createdAt).getTime(),
+        );
+
+        setTransactions(sortedTransactions);
+      } catch (error) {
+        if (ignore) {
+          return;
+        }
+
+        setErrorMessage(
+          error instanceof ApiError
+            ? error.message
+            : "Unable to load transactions. Please try again.",
+        );
+      } finally {
+        if (!ignore) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    void fetchInitialTransactions();
+
+    return () => {
+      ignore = true;
+    };
   }, []);
+
+  const handleDelete = async () => {
+    if (!transactionToDelete) {
+      return;
+    }
+
+    try {
+      await deleteTransaction(transactionToDelete.id);
+
+      await loadTransactions();
+
+      setTransactionToDelete(null);
+      setSuccessMessage("Transaction deleted successfully.");
+
+      setTimeout(() => {
+        setSuccessMessage("");
+      }, 3000);
+    } catch (error) {
+      if (error instanceof ApiError) {
+        setErrorMessage(error.message);
+      } else {
+        setErrorMessage("Unable to delete transaction.");
+      }
+    }
+  };
+
+  const uniqueCategories = Array.from(
+    new Map(
+      transactions.map((transaction) => [
+        transaction.categoryId,
+        {
+          id: transaction.categoryId,
+          name: transaction.categoryName,
+        },
+      ]),
+    ).values(),
+  );
+
+  const filteredTransactions = transactions.filter((transaction) => {
+    const matchesType =
+      selectedType === "ALL" || transaction.type === selectedType;
+
+    const matchesCategory =
+      selectedCategory === "ALL" ||
+      transaction.categoryName === selectedCategory;
+
+    return matchesType && matchesCategory;
+  });
 
   return (
     <AppLayout>
@@ -74,7 +177,10 @@ function TransactionsPage() {
           <button
             className="add-transaction-button"
             type="button"
-            onClick={() => setIsFormOpen(true)}
+            onClick={() => {
+              setSelectedTransaction(null);
+              setIsFormOpen(true);
+            }}
           >
             + Add Transaction
           </button>
@@ -83,17 +189,33 @@ function TransactionsPage() {
         {isFormOpen && (
           <div className="modal-backdrop">
             <div className="modal-card">
-              <h3>Add Transaction</h3>
+              <h3>
+                {selectedTransaction ? "Edit Transaction" : "Add Transaction"}
+              </h3>
+
               <TransactionForm
-                onTransactionCreated={async () => {
+                key={selectedTransaction?.id ?? "new"}
+                transaction={selectedTransaction}
+                onSuccess={async () => {
                   await loadTransactions();
-                  setSuccessMessage("Transaction added successfully.");
+
+                  setSuccessMessage(
+                    selectedTransaction
+                      ? "Transaction updated successfully."
+                      : "Transaction added successfully.",
+                  );
+
                   setIsFormOpen(false);
+                  setSelectedTransaction(null);
+
                   setTimeout(() => {
                     setSuccessMessage("");
                   }, 3000);
                 }}
-                onCancel={() => setIsFormOpen(false)}
+                onCancel={() => {
+                  setIsFormOpen(false);
+                  setSelectedTransaction(null);
+                }}
               />
             </div>
           </div>
@@ -102,6 +224,7 @@ function TransactionsPage() {
         {successMessage && (
           <div className="toast-message">{successMessage}</div>
         )}
+
         {isLoading && <p>Loading transactions...</p>}
 
         {errorMessage && <p>{errorMessage}</p>}
@@ -110,20 +233,143 @@ function TransactionsPage() {
           <p>No transactions yet.</p>
         )}
 
+        {transactionToDelete && (
+          <div className="modal-backdrop">
+            <div className="modal-card">
+              <h3>Delete Transaction</h3>
+
+              <p>Are you sure you want to delete this transaction?</p>
+
+              <div className="transaction-form-actions">
+                <button
+                  className="transaction-cancel-button"
+                  type="button"
+                  onClick={() => setTransactionToDelete(null)}
+                >
+                  Cancel
+                </button>
+
+                <button
+                  className="delete-confirm-button"
+                  type="button"
+                  onClick={() => {
+                    void handleDelete();
+                  }}
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {!isLoading && !errorMessage && transactions.length > 0 && (
           <table className="transactions-table">
             <thead>
               <tr>
                 <th>Date</th>
-                <th>Type</th>
-                <th>Category</th>
+                <th className="table-filter-header">
+                  <button
+                    className="table-filter-trigger"
+                    aria-expanded={filterMenuOpen === "type"}
+                    onClick={() =>
+                      setFilterMenuOpen(
+                        filterMenuOpen === "type" ? null : "type",
+                      )
+                    }
+                  >
+                    <span>Type</span>
+                    <ChevronDown size={18} />
+                  </button>
+
+                  {filterMenuOpen === "type" && (
+                    <div className="table-filter-menu">
+                      <button
+                        type="button"
+                        aria-pressed={selectedType === "ALL"}
+                        onClick={() => {
+                          setSelectedType("ALL");
+                          setFilterMenuOpen(null);
+                        }}
+                      >
+                        All
+                      </button>
+
+                      <button
+                        type="button"
+                        aria-pressed={selectedType === "INCOME"}
+                        onClick={() => {
+                          setSelectedType("INCOME");
+                          setFilterMenuOpen(null);
+                        }}
+                      >
+                        Income
+                      </button>
+
+                      <button
+                        type="button"
+                        aria-pressed={selectedType === "EXPENSE"}
+                        onClick={() => {
+                          setSelectedType("EXPENSE");
+                          setFilterMenuOpen(null);
+                        }}
+                      >
+                        Expense
+                      </button>
+                    </div>
+                  )}
+                </th>
+                <th className="table-filter-header">
+                  <button
+                    className="table-filter-trigger"
+                    aria-expanded={filterMenuOpen === "category"}
+                    onClick={() =>
+                      setFilterMenuOpen(
+                        filterMenuOpen === "category" ? null : "category",
+                      )
+                    }
+                  >
+                    <span>Category</span>
+                    <ChevronDown size={18} />
+                  </button>
+
+                  {filterMenuOpen === "category" && (
+                    <div className="table-filter-menu">
+                      <button
+                        key="ALL"
+                        type="button"
+                        aria-pressed={selectedCategory === "ALL"}
+                        onClick={() => {
+                          setSelectedCategory("ALL");
+                          setFilterMenuOpen(null);
+                        }}
+                      >
+                        All
+                      </button>
+                      {uniqueCategories.map((category) => (
+                        <button
+                          key={category.id}
+                          type="button"
+                          aria-pressed={selectedCategory === category.name}
+                          onClick={() => {
+                            setSelectedCategory(category.name);
+                            setFilterMenuOpen(null);
+                          }}
+                        >
+                          {category.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </th>
                 <th>Description</th>
+                <th>Actions</th>
                 <th className="amount-column">Amount</th>
               </tr>
             </thead>
 
             <tbody>
-              {transactions.map((transaction) => (
+              {filteredTransactions.map((transaction) => (
                 <tr key={transaction.id}>
                   <td>{formatTransactionDate(transaction.transactionDate)}</td>
 
@@ -136,6 +382,31 @@ function TransactionsPage() {
                   <td>{transaction.categoryName}</td>
 
                   <td>{transaction.description || "-"}</td>
+
+                  <td>
+                    <div className="transaction-actions">
+                      <button
+                        className="transaction-action-button"
+                        type="button"
+                        title="Edit transaction"
+                        onClick={() => {
+                          setSelectedTransaction(transaction);
+                          setIsFormOpen(true);
+                        }}
+                      >
+                        <Pencil size={18} />
+                      </button>
+
+                      <button
+                        className="transaction-action-button delete"
+                        type="button"
+                        title="Delete transaction"
+                        onClick={() => setTransactionToDelete(transaction)}
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    </div>
+                  </td>
 
                   <td className="amount-column">
                     {formatTransactionAmount(transaction.amount)}

@@ -21,9 +21,11 @@ function LoginPage() {
     };
     try {
       await login(request);
-      navigate("/dashboard");
+      navigate("/dashboard", { replace: true });
     } catch (error) {
       if (error instanceof ApiError) {
+        setErrorMessage(error.message);
+      } else if (error instanceof Error) {
         setErrorMessage(error.message);
       } else {
         setErrorMessage("Something went wrong. Please try again.");
@@ -48,6 +50,7 @@ function LoginPage() {
             id="email"
             type="email"
             value={email}
+            autoComplete="username"
             onChange={(event) => setEmail(event.target.value)}
             required
           />
@@ -60,6 +63,7 @@ function LoginPage() {
             id="password"
             type="password"
             value={password}
+            autoComplete="current-password"
             onChange={(event) => setPassword(event.target.value)}
             required
           />

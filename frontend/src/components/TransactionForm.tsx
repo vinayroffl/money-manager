@@ -2,24 +2,47 @@ import { useEffect, useState } from "react";
 import type {
   CategoryResponse,
   TransactionRequest,
+  TransactionResponse,
   TransactionType,
 } from "../types/transaction";
-import { createTransaction, getCategories } from "../api/transactionApi";
+import {
+  createTransaction,
+  getCategories,
+  updateTransaction,
+} from "../api/transactionApi";
 import ApiError from "../api/ApiError";
 
 interface TransactionFormProps {
-  onTransactionCreated: () => Promise<void>;
+  transaction: TransactionResponse | null;
+  onSuccess: () => Promise<void>;
   onCancel: () => void;
 }
+
 function TransactionForm({
-  onTransactionCreated,
+  transaction,
+  onSuccess,
   onCancel,
 }: TransactionFormProps) {
-  const [type, setType] = useState<TransactionType | "">("");
-  const [amount, setAmount] = useState("");
-  const [categoryId, setCategoryId] = useState("");
-  const [date, setDate] = useState("");
-  const [description, setDescription] = useState("");
+  const [type, setType] = useState<TransactionType | "">(
+    transaction?.type ?? "",
+  );
+
+  const [amount, setAmount] = useState(
+    transaction ? String(transaction.amount) : "",
+  );
+
+  const [categoryId, setCategoryId] = useState(
+    transaction ? String(transaction.categoryId) : "",
+  );
+
+  const [date, setDate] = useState(
+    transaction?.transactionDate?.slice(0, 16) ?? "",
+  );
+
+  const [description, setDescription] = useState(
+    transaction?.description ?? "",
+  );
+
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,6 +69,8 @@ function TransactionForm({
     void loadCategories();
   }, []);
 
+
+
   const filteredCategories = categories.filter(
     (category) => category.transactionType === type,
   );
@@ -68,20 +93,22 @@ function TransactionForm({
         transactionDate: date || undefined,
       };
 
-      await createTransaction(request);
+      if (transaction) {
+        await updateTransaction(transaction.id, request);
+      } else {
+        await createTransaction(request);
+      }
 
-      setType("");
-      setAmount("");
-      setCategoryId("");
-      setDate("");
-      setDescription("");
-
-      await onTransactionCreated();
+      await onSuccess();
     } catch (error) {
       if (error instanceof ApiError) {
         setErrorMessage(error.message);
       } else {
-        setErrorMessage("Unable to create transaction.");
+        setErrorMessage(
+          transaction
+            ? "Unable to update transaction."
+            : "Unable to create transaction.",
+        );
       }
     } finally {
       setIsSubmitting(false);
@@ -109,6 +136,7 @@ function TransactionForm({
             setCategoryId("");
           }}
           required
+          disabled={isSubmitting}
         >
           <option value="">Select type</option>
           <option value="EXPENSE">Expense</option>
@@ -123,7 +151,7 @@ function TransactionForm({
           id="category"
           value={categoryId}
           onChange={(event) => setCategoryId(event.target.value)}
-          disabled={!type}
+          disabled={!type || isSubmitting}
           required
         >
           <option value="">Select category</option>
@@ -147,6 +175,7 @@ function TransactionForm({
           value={amount}
           onChange={(event) => setAmount(event.target.value)}
           required
+          disabled={isSubmitting}
         />
       </div>
 
@@ -158,6 +187,7 @@ function TransactionForm({
           type="datetime-local"
           value={date}
           onChange={(event) => setDate(event.target.value)}
+          disabled={isSubmitting}
         />
       </div>
 
@@ -169,6 +199,7 @@ function TransactionForm({
           maxLength={500}
           value={description}
           onChange={(event) => setDescription(event.target.value)}
+          disabled={isSubmitting}
         />
       </div>
 
@@ -187,7 +218,13 @@ function TransactionForm({
           type="submit"
           disabled={isSubmitting}
         >
-          {isSubmitting ? "Saving..." : "Save Transaction"}
+          {isSubmitting
+            ? transaction
+              ? "Updating..."
+              : "Saving..."
+            : transaction
+              ? "Update Transaction"
+              : "Save Transaction"}
         </button>
       </div>
     </form>

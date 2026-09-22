@@ -21,6 +21,21 @@ async function apiClient(
     headers,
   });
 
+  const isAuthRequest =
+    resourcePath === "/api/auth/login" || resourcePath === "/api/auth/register";
+
+  if (response.status === 401 && !isAuthRequest) {
+    // Ignore a response from an older session after a new login.
+    if (localStorage.getItem("token") === token) {
+      window.dispatchEvent(new Event("auth:unauthorized"));
+    }
+
+    throw new ApiError(
+      401,
+      "Your session is no longer valid. Please sign in again.",
+    );
+  }
+
   if (!response.ok) {
     const errorData = await response.json();
 
