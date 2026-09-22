@@ -18,13 +18,23 @@ interface TransactionFormProps {
   onCancel: () => void;
 }
 
+function getCurrentLocalDateTime(): string {
+  const now = new Date();
+  const pad = (value: number) => String(value).padStart(2, "0");
+
+  return (
+    `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}` +
+    `T${pad(now.getHours())}:${pad(now.getMinutes())}`
+  );
+}
+
 function TransactionForm({
   transaction,
   onSuccess,
   onCancel,
 }: TransactionFormProps) {
   const [type, setType] = useState<TransactionType | "">(
-    transaction?.type ?? "",
+    transaction?.type ?? "EXPENSE",
   );
 
   const [amount, setAmount] = useState(
@@ -35,8 +45,10 @@ function TransactionForm({
     transaction ? String(transaction.categoryId) : "",
   );
 
-  const [date, setDate] = useState(
-    transaction?.transactionDate?.slice(0, 16) ?? "",
+  const [date, setDate] = useState(() =>
+    transaction
+      ? (transaction.transactionDate?.slice(0, 16) ?? "")
+      : getCurrentLocalDateTime(),
   );
 
   const [description, setDescription] = useState(
@@ -68,8 +80,6 @@ function TransactionForm({
 
     void loadCategories();
   }, []);
-
-
 
   const filteredCategories = categories.filter(
     (category) => category.transactionType === type,
