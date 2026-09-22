@@ -376,3 +376,9 @@
   outline: 2px solid #4f46e5;
   outline-offset: 2px;
 }
+
+.transactions-table td.transactions-empty-state {
+  padding: 32px 16px;
+  text-align: center;
+  color: #6b7280;
+}

@@ -369,6 +369,13 @@ function TransactionsPage() {
             </thead>
 
             <tbody>
+              {filteredTransactions.length === 0 && (
+                <tr>
+                  <td colSpan={6} className="transactions-empty-state">
+                    No transactions match your filters.
+                  </td>
+                </tr>
+              )}
               {filteredTransactions.map((transaction) => (
                 <tr key={transaction.id}>
                   <td>{formatTransactionDate(transaction.transactionDate)}</td>
