@@ -32,6 +32,7 @@ function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [selectedTransaction, setSelectedTransaction] =
@@ -118,9 +119,11 @@ function TransactionsPage() {
   }, []);
 
   const handleDelete = async () => {
-    if (!transactionToDelete) {
+    if (!transactionToDelete || isDeleting) {
       return;
     }
+
+    setIsDeleting(true);
 
     try {
       await deleteTransaction(transactionToDelete.id);
@@ -139,6 +142,8 @@ function TransactionsPage() {
       } else {
         setErrorMessage("Unable to delete transaction.");
       }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -245,6 +250,7 @@ function TransactionsPage() {
                   className="transaction-cancel-button"
                   type="button"
                   onClick={() => setTransactionToDelete(null)}
+                  disabled={isDeleting}
                 >
                   Cancel
                 </button>
@@ -255,8 +261,9 @@ function TransactionsPage() {
                   onClick={() => {
                     void handleDelete();
                   }}
+                  disabled={isDeleting}
                 >
-                  Delete
+                  {isDeleting ? "Deleting..." : "Delete"}
                 </button>
               </div>
             </div>
