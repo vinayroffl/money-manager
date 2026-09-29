@@ -31,6 +31,7 @@ function formatTransactionAmount(amount: number) {
 function TransactionsPage() {
   const [transactions, setTransactions] = useState<TransactionResponse[]>([]);
   const [errorMessage, setErrorMessage] = useState("");
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -54,25 +55,36 @@ function TransactionsPage() {
     return `${now.getFullYear()}-${month}`;
   });
 
-  const loadTransactions = async () => {
+  const loadTransactions = async (
+    failureMessage = "Unable to load transactions. Please retry.",
+  ): Promise<boolean> => {
+    setIsLoading(true);
+    setErrorMessage("");
+
     try {
       const response = await getTransactions();
 
-      if (response.success) {
-        const sortedTransactions = [...response.data].sort(
-          (a, b) =>
-            new Date(b.transactionDate ?? b.createdAt).getTime() -
-            new Date(a.transactionDate ?? a.createdAt).getTime(),
-        );
+      if (!response.success) {
+        setErrorMessage(failureMessage);
+        return false;
+      }
 
-        setTransactions(sortedTransactions);
-      }
+      const sortedTransactions = [...response.data].sort(
+        (a, b) =>
+          new Date(b.transactionDate ?? b.createdAt).getTime() -
+          new Date(a.transactionDate ?? a.createdAt).getTime(),
+      );
+
+      setTransactions(sortedTransactions);
+      return true;
     } catch (error) {
-      if (error instanceof ApiError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("Something went wrong. Please try again.");
-      }
+      setErrorMessage(
+        error instanceof ApiError && error.status === 401
+          ? error.message
+          : failureMessage,
+      );
+
+      return false;
     } finally {
       setIsLoading(false);
     }
@@ -131,24 +143,28 @@ function TransactionsPage() {
     }
 
     setIsDeleting(true);
+    setDeleteErrorMessage("");
 
     try {
       await deleteTransaction(transactionToDelete.id);
 
-      await loadTransactions();
-
+      // Deletion succeeded; close the confirmation.
       setTransactionToDelete(null);
       setSuccessMessage("Transaction deleted successfully.");
 
       setTimeout(() => {
         setSuccessMessage("");
       }, 3000);
+
+      await loadTransactions(
+        "Transaction deleted, but the list could not refresh. Please retry loading it.",
+      );
     } catch (error) {
-      if (error instanceof ApiError) {
-        setErrorMessage(error.message);
-      } else {
-        setErrorMessage("Unable to delete transaction.");
-      }
+      setDeleteErrorMessage(
+        error instanceof ApiError
+          ? error.message
+          : "Unable to delete transaction. Please try again.",
+      );
     } finally {
       setIsDeleting(false);
     }
@@ -232,20 +248,25 @@ function TransactionsPage() {
                 key={selectedTransaction?.id ?? "new"}
                 transaction={selectedTransaction}
                 onSuccess={async () => {
-                  await loadTransactions();
+                  const wasEditing = selectedTransaction !== null;
+
+                  // The save has already succeeded.
+                  setIsFormOpen(false);
+                  setSelectedTransaction(null);
 
                   setSuccessMessage(
-                    selectedTransaction
+                    wasEditing
                       ? "Transaction updated successfully."
                       : "Transaction added successfully.",
                   );
 
-                  setIsFormOpen(false);
-                  setSelectedTransaction(null);
-
                   setTimeout(() => {
                     setSuccessMessage("");
                   }, 3000);
+
+                  await loadTransactions(
+                    "Transaction saved, but the list could not refresh. Please retry loading it.",
+                  );
                 }}
                 onCancel={() => {
                   setIsFormOpen(false);
@@ -262,7 +283,21 @@ function TransactionsPage() {
 
         {isLoading && <p>Loading transactions...</p>}
 
-        {errorMessage && <p>{errorMessage}</p>}
+        {errorMessage && (
+          <div role="alert">
+            <p>{errorMessage}</p>
+
+            <button
+              type="button"
+              disabled={isLoading}
+              onClick={() => {
+                void loadTransactions();
+              }}
+            >
+              Retry loading transactions
+            </button>
+          </div>
+        )}
 
         {!isLoading && !errorMessage && transactions.length === 0 && (
           <p>No transactions yet.</p>
@@ -274,6 +309,7 @@ function TransactionsPage() {
               <h3>Delete Transaction</h3>
 
               <p>Are you sure you want to delete this transaction?</p>
+              {deleteErrorMessage && <p role="alert">{deleteErrorMessage}</p>}
 
               <div className="transaction-form-actions">
                 <button
@@ -448,7 +484,10 @@ function TransactionsPage() {
                           className="transaction-action-button delete"
                           type="button"
                           title="Delete transaction"
-                          onClick={() => setTransactionToDelete(transaction)}
+                          onClick={() => {
+                            setDeleteErrorMessage("");
+                            setTransactionToDelete(transaction);
+                          }}
                         >
                           <Trash2 size={18} />
                         </button>

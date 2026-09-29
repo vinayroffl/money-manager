@@ -143,11 +143,11 @@
 .modal-card {
   width: 100%;
   max-width: 640px;
-
+  max-height: calc(100dvh - 48px);
+  overflow-y: auto;
   background: white;
   border-radius: 12px;
   padding: 24px;
-
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.18);
 }
 

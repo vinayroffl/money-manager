@@ -1,5 +1,6 @@
 package com.vinay.moneymanager.transaction.service.impl;
 
+import com.vinay.moneymanager.common.exception.InvalidRequestException;
 import com.vinay.moneymanager.common.exception.ResourceNotFoundException;
 import com.vinay.moneymanager.transaction.dto.request.TransactionRequest;
 import com.vinay.moneymanager.transaction.dto.response.CategoryResponse;
@@ -32,6 +33,9 @@ public class TransactionServiceImpl implements TransactionService {
 
     User user = getAuthenticatedUser(email);
     Category category = getCategory(request.getCategoryId());
+    if (category.getTransactionType() != request.getType()) {
+      throw new InvalidRequestException("Category does not match the transaction type");
+    }
     LocalDateTime transactionDate =
         request.getTransactionDate() != null ? request.getTransactionDate() : LocalDateTime.now();
 
@@ -73,6 +77,9 @@ public class TransactionServiceImpl implements TransactionService {
             .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
     Category category = getCategory(request.getCategoryId());
+    if (category.getTransactionType() != request.getType()) {
+      throw new InvalidRequestException("Category does not match the transaction type");
+    }
     LocalDateTime transactionDate =
         request.getTransactionDate() != null
             ? request.getTransactionDate()
