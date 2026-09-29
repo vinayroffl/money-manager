@@ -387,3 +387,35 @@
   opacity: 0.6;
   cursor: not-allowed;
 }
+
+.transactions-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.transactions-filters label {
+  font-weight: 600;
+  color: #374151;
+}
+
+.transactions-filters input,
+.transactions-filters button {
+  padding: 8px 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  background: white;
+  color: #374151;
+  font: inherit;
+}
+
+.transactions-filters button {
+  cursor: pointer;
+}
+
+.transactions-filters button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}

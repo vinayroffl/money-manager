@@ -47,6 +47,13 @@ function TransactionsPage() {
     "type" | "category" | null
   >(null);
 
+  const [selectedMonth, setSelectedMonth] = useState(() => {
+    const now = new Date();
+    const month = String(now.getMonth() + 1).padStart(2, "0");
+
+    return `${now.getFullYear()}-${month}`;
+  });
+
   const loadTransactions = async () => {
     try {
       const response = await getTransactions();
@@ -167,7 +174,11 @@ function TransactionsPage() {
       selectedCategory === "ALL" ||
       transaction.categoryName === selectedCategory;
 
-    return matchesType && matchesCategory;
+    const matchesMonth =
+      selectedMonth === "" ||
+      transaction.transactionDate?.slice(0, 7) === selectedMonth;
+
+    return matchesType && matchesCategory && matchesMonth;
   });
 
   return (
@@ -188,6 +199,25 @@ function TransactionsPage() {
             }}
           >
             + Add Transaction
+          </button>
+        </div>
+
+        <div className="transactions-filters">
+          <label htmlFor="transaction-month">Month</label>
+
+          <input
+            id="transaction-month"
+            type="month"
+            value={selectedMonth}
+            onChange={(event) => setSelectedMonth(event.target.value)}
+          />
+
+          <button
+            type="button"
+            onClick={() => setSelectedMonth("")}
+            disabled={selectedMonth === ""}
+          >
+            All months
           </button>
         </div>
 
