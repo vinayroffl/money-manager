@@ -183,7 +183,7 @@ function TransactionsPage() {
 
   return (
     <AppLayout>
-      <div>
+      <div className="transactions-page">
         <div className="transactions-header">
           <div>
             <h2>Transactions</h2>
@@ -301,164 +301,168 @@ function TransactionsPage() {
         )}
 
         {!isLoading && !errorMessage && transactions.length > 0 && (
-          <table className="transactions-table">
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th className="table-filter-header">
-                  <button
-                    className="table-filter-trigger"
-                    aria-expanded={filterMenuOpen === "type"}
-                    onClick={() =>
-                      setFilterMenuOpen(
-                        filterMenuOpen === "type" ? null : "type",
-                      )
-                    }
-                  >
-                    <span>Type</span>
-                    <ChevronDown size={18} />
-                  </button>
+          <div className="transactions-table-scroll">
+            <table className="transactions-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th className="table-filter-header">
+                    <button
+                      className="table-filter-trigger"
+                      aria-expanded={filterMenuOpen === "type"}
+                      onClick={() =>
+                        setFilterMenuOpen(
+                          filterMenuOpen === "type" ? null : "type",
+                        )
+                      }
+                    >
+                      <span>Type</span>
+                      <ChevronDown size={18} />
+                    </button>
 
-                  {filterMenuOpen === "type" && (
-                    <div className="table-filter-menu">
-                      <button
-                        type="button"
-                        aria-pressed={selectedType === "ALL"}
-                        onClick={() => {
-                          setSelectedType("ALL");
-                          setFilterMenuOpen(null);
-                        }}
-                      >
-                        All
-                      </button>
-
-                      <button
-                        type="button"
-                        aria-pressed={selectedType === "INCOME"}
-                        onClick={() => {
-                          setSelectedType("INCOME");
-                          setFilterMenuOpen(null);
-                        }}
-                      >
-                        Income
-                      </button>
-
-                      <button
-                        type="button"
-                        aria-pressed={selectedType === "EXPENSE"}
-                        onClick={() => {
-                          setSelectedType("EXPENSE");
-                          setFilterMenuOpen(null);
-                        }}
-                      >
-                        Expense
-                      </button>
-                    </div>
-                  )}
-                </th>
-                <th className="table-filter-header">
-                  <button
-                    className="table-filter-trigger"
-                    aria-expanded={filterMenuOpen === "category"}
-                    onClick={() =>
-                      setFilterMenuOpen(
-                        filterMenuOpen === "category" ? null : "category",
-                      )
-                    }
-                  >
-                    <span>Category</span>
-                    <ChevronDown size={18} />
-                  </button>
-
-                  {filterMenuOpen === "category" && (
-                    <div className="table-filter-menu">
-                      <button
-                        key="ALL"
-                        type="button"
-                        aria-pressed={selectedCategory === "ALL"}
-                        onClick={() => {
-                          setSelectedCategory("ALL");
-                          setFilterMenuOpen(null);
-                        }}
-                      >
-                        All
-                      </button>
-                      {uniqueCategories.map((category) => (
+                    {filterMenuOpen === "type" && (
+                      <div className="table-filter-menu">
                         <button
-                          key={category.id}
                           type="button"
-                          aria-pressed={selectedCategory === category.name}
+                          aria-pressed={selectedType === "ALL"}
                           onClick={() => {
-                            setSelectedCategory(category.name);
+                            setSelectedType("ALL");
                             setFilterMenuOpen(null);
                           }}
                         >
-                          {category.name}
+                          All
                         </button>
-                      ))}
-                    </div>
-                  )}
-                </th>
-                <th>Description</th>
-                <th>Actions</th>
-                <th className="amount-column">Amount</th>
-              </tr>
-            </thead>
 
-            <tbody>
-              {filteredTransactions.length === 0 && (
-                <tr>
-                  <td colSpan={6} className="transactions-empty-state">
-                    No transactions match your filters.
-                  </td>
+                        <button
+                          type="button"
+                          aria-pressed={selectedType === "INCOME"}
+                          onClick={() => {
+                            setSelectedType("INCOME");
+                            setFilterMenuOpen(null);
+                          }}
+                        >
+                          Income
+                        </button>
+
+                        <button
+                          type="button"
+                          aria-pressed={selectedType === "EXPENSE"}
+                          onClick={() => {
+                            setSelectedType("EXPENSE");
+                            setFilterMenuOpen(null);
+                          }}
+                        >
+                          Expense
+                        </button>
+                      </div>
+                    )}
+                  </th>
+                  <th className="table-filter-header">
+                    <button
+                      className="table-filter-trigger"
+                      aria-expanded={filterMenuOpen === "category"}
+                      onClick={() =>
+                        setFilterMenuOpen(
+                          filterMenuOpen === "category" ? null : "category",
+                        )
+                      }
+                    >
+                      <span>Category</span>
+                      <ChevronDown size={18} />
+                    </button>
+
+                    {filterMenuOpen === "category" && (
+                      <div className="table-filter-menu">
+                        <button
+                          key="ALL"
+                          type="button"
+                          aria-pressed={selectedCategory === "ALL"}
+                          onClick={() => {
+                            setSelectedCategory("ALL");
+                            setFilterMenuOpen(null);
+                          }}
+                        >
+                          All
+                        </button>
+                        {uniqueCategories.map((category) => (
+                          <button
+                            key={category.id}
+                            type="button"
+                            aria-pressed={selectedCategory === category.name}
+                            onClick={() => {
+                              setSelectedCategory(category.name);
+                              setFilterMenuOpen(null);
+                            }}
+                          >
+                            {category.name}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </th>
+                  <th>Description</th>
+                  <th>Actions</th>
+                  <th className="amount-column">Amount</th>
                 </tr>
-              )}
-              {filteredTransactions.map((transaction) => (
-                <tr key={transaction.id}>
-                  <td>{formatTransactionDate(transaction.transactionDate)}</td>
+              </thead>
 
-                  <td
-                    className={`transaction-type ${transaction.type.toLowerCase()}`}
-                  >
-                    {transaction.type === "INCOME" ? "Income" : "Expense"}
-                  </td>
+              <tbody>
+                {filteredTransactions.length === 0 && (
+                  <tr>
+                    <td colSpan={6} className="transactions-empty-state">
+                      No transactions match your filters.
+                    </td>
+                  </tr>
+                )}
+                {filteredTransactions.map((transaction) => (
+                  <tr key={transaction.id}>
+                    <td>
+                      {formatTransactionDate(transaction.transactionDate)}
+                    </td>
 
-                  <td>{transaction.categoryName}</td>
+                    <td
+                      className={`transaction-type ${transaction.type.toLowerCase()}`}
+                    >
+                      {transaction.type === "INCOME" ? "Income" : "Expense"}
+                    </td>
 
-                  <td>{transaction.description || "-"}</td>
+                    <td>{transaction.categoryName}</td>
 
-                  <td>
-                    <div className="transaction-actions">
-                      <button
-                        className="transaction-action-button"
-                        type="button"
-                        title="Edit transaction"
-                        onClick={() => {
-                          setSelectedTransaction(transaction);
-                          setIsFormOpen(true);
-                        }}
-                      >
-                        <Pencil size={18} />
-                      </button>
+                    <td>{transaction.description || "-"}</td>
 
-                      <button
-                        className="transaction-action-button delete"
-                        type="button"
-                        title="Delete transaction"
-                        onClick={() => setTransactionToDelete(transaction)}
-                      >
-                        <Trash2 size={18} />
-                      </button>
-                    </div>
-                  </td>
+                    <td>
+                      <div className="transaction-actions">
+                        <button
+                          className="transaction-action-button"
+                          type="button"
+                          title="Edit transaction"
+                          onClick={() => {
+                            setSelectedTransaction(transaction);
+                            setIsFormOpen(true);
+                          }}
+                        >
+                          <Pencil size={18} />
+                        </button>
 
-                  <td className="amount-column">
-                    {formatTransactionAmount(transaction.amount)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                        <button
+                          className="transaction-action-button delete"
+                          type="button"
+                          title="Delete transaction"
+                          onClick={() => setTransactionToDelete(transaction)}
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </div>
+                    </td>
+
+                    <td className="amount-column">
+                      {formatTransactionAmount(transaction.amount)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         )}
       </div>
     </AppLayout>
