@@ -28,14 +28,18 @@ public class TransactionServiceImpl implements TransactionService {
   private final CategoryRepository categoryRepository;
   private final TransactionRepository transactionRepository;
 
+  private void validateCategoryType(Category category, TransactionType transactionType) {
+    if (category.getTransactionType() != transactionType) {
+      throw new InvalidRequestException("Category does not match the transaction type");
+    }
+  }
+
   @Override
   public TransactionResponse createTransaction(TransactionRequest request, String email) {
 
     User user = getAuthenticatedUser(email);
     Category category = getCategory(request.getCategoryId());
-    if (category.getTransactionType() != request.getType()) {
-      throw new InvalidRequestException("Category does not match the transaction type");
-    }
+    validateCategoryType(category, request.getType());
     LocalDateTime transactionDate =
         request.getTransactionDate() != null ? request.getTransactionDate() : LocalDateTime.now();
 
@@ -77,9 +81,7 @@ public class TransactionServiceImpl implements TransactionService {
             .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
 
     Category category = getCategory(request.getCategoryId());
-    if (category.getTransactionType() != request.getType()) {
-      throw new InvalidRequestException("Category does not match the transaction type");
-    }
+    validateCategoryType(category, request.getType());
     LocalDateTime transactionDate =
         request.getTransactionDate() != null
             ? request.getTransactionDate()
