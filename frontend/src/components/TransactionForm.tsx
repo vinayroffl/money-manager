@@ -81,6 +81,21 @@ function TransactionForm({
     void loadCategories();
   }, []);
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isSubmitting) {
+        event.preventDefault();
+        onCancel();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isSubmitting, onCancel]);
+
   const filteredCategories = categories.filter(
     (category) => category.transactionType === type,
   );

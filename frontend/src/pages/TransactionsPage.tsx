@@ -137,6 +137,57 @@ function TransactionsPage() {
     };
   }, []);
 
+  useEffect(() => {
+    if (filterMenuOpen === null) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (
+        target instanceof Element &&
+        !target.closest(".table-filter-header")
+      ) {
+        setFilterMenuOpen(null);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setFilterMenuOpen(null);
+      }
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [filterMenuOpen]);
+
+  useEffect(() => {
+    if (!transactionToDelete) {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape" && !isDeleting) {
+        event.preventDefault();
+        setTransactionToDelete(null);
+        setDeleteErrorMessage("");
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [transactionToDelete, isDeleting]);
+
   const handleDelete = async () => {
     if (!transactionToDelete || isDeleting) {
       return;
@@ -288,6 +339,7 @@ function TransactionsPage() {
             <p>{errorMessage}</p>
 
             <button
+              className="transactions-retry-button"
               type="button"
               disabled={isLoading}
               onClick={() => {
