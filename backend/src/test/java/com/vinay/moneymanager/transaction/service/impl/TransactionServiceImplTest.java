@@ -551,7 +551,12 @@ class TransactionServiceImplTest {
   }
 
   private Category getCategory(String categoryName) {
-    return Category.builder().id(1).name(categoryName).description("Default description").build();
+    return Category.builder()
+        .id(1)
+        .name(categoryName)
+        .description("Default description")
+        .transactionType(TransactionType.EXPENSE)
+        .build();
   }
 
   private User getUser() {
