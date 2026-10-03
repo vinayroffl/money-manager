@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import AppLayout from "../components/AppLayout";
 import TransactionForm from "../components/TransactionForm";
 import { getTransactions, deleteTransaction } from "../api/transactionApi";
@@ -54,6 +54,9 @@ function TransactionsPage() {
 
     return `${now.getFullYear()}-${month}`;
   });
+
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const modalTriggerRef = useRef<HTMLElement | null>(null);
 
   const loadTransactions = async (
     failureMessage = "Unable to load transactions. Please retry.",
@@ -188,6 +191,76 @@ function TransactionsPage() {
     };
   }, [transactionToDelete, isDeleting]);
 
+  useEffect(() => {
+    const modalIsOpen = isFormOpen || transactionToDelete !== null;
+
+    if (!modalIsOpen) {
+      modalTriggerRef.current?.focus();
+      return;
+    }
+
+    const modal = modalRef.current;
+
+    if (!modal) {
+      return;
+    }
+
+    const focusableElements = modal.querySelectorAll<HTMLElement>(
+      'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+    );
+
+    const firstFocusableElement = focusableElements[0];
+
+    firstFocusableElement?.focus();
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+
+        if (isDeleting) {
+          return;
+        }
+
+        setIsFormOpen(false);
+        setSelectedTransaction(null);
+        setTransactionToDelete(null);
+        setDeleteErrorMessage("");
+
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      const elements = modal.querySelectorAll<HTMLElement>(
+        'button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), a[href], [tabindex]:not([tabindex="-1"])',
+      );
+
+      if (elements.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const firstElement = elements[0];
+      const lastElement = elements[elements.length - 1];
+
+      if (event.shiftKey && document.activeElement === firstElement) {
+        event.preventDefault();
+        lastElement.focus();
+      } else if (!event.shiftKey && document.activeElement === lastElement) {
+        event.preventDefault();
+        firstElement.focus();
+      }
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isFormOpen, transactionToDelete, isDeleting]);
+
   const handleDelete = async () => {
     if (!transactionToDelete || isDeleting) {
       return;
@@ -260,7 +333,8 @@ function TransactionsPage() {
           <button
             className="add-transaction-button"
             type="button"
-            onClick={() => {
+            onClick={(event) => {
+              modalTriggerRef.current = event.currentTarget;
               setSelectedTransaction(null);
               setIsFormOpen(true);
             }}
@@ -290,8 +364,14 @@ function TransactionsPage() {
 
         {isFormOpen && (
           <div className="modal-backdrop">
-            <div className="modal-card">
-              <h3>
+            <div
+              ref={modalRef}
+              className="modal-card"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="transaction-modal-title"
+            >
+              <h3 id="transaction-modal-title">
                 {selectedTransaction ? "Edit Transaction" : "Add Transaction"}
               </h3>
 
@@ -357,7 +437,14 @@ function TransactionsPage() {
 
         {transactionToDelete && (
           <div className="modal-backdrop">
-            <div className="modal-card">
+            <div
+              ref={modalRef}
+              className="modal-card"
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="delete-modal-title"
+            >
+              <h3 id="delete-modal-title">Delete Transaction</h3>
               <h3>Delete Transaction</h3>
 
               <p>Are you sure you want to delete this transaction?</p>
@@ -524,7 +611,8 @@ function TransactionsPage() {
                           className="transaction-action-button"
                           type="button"
                           title="Edit transaction"
-                          onClick={() => {
+                          onClick={(event) => {
+                            modalTriggerRef.current = event.currentTarget;
                             setSelectedTransaction(transaction);
                             setIsFormOpen(true);
                           }}
@@ -536,7 +624,8 @@ function TransactionsPage() {
                           className="transaction-action-button delete"
                           type="button"
                           title="Delete transaction"
-                          onClick={() => {
+                          onClick={(event) => {
+                            modalTriggerRef.current = event.currentTarget;
                             setDeleteErrorMessage("");
                             setTransactionToDelete(transaction);
                           }}
