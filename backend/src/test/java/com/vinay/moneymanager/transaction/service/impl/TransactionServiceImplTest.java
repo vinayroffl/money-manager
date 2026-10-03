@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
+import com.vinay.moneymanager.common.exception.InvalidRequestException;
 import com.vinay.moneymanager.common.exception.ResourceNotFoundException;
 import com.vinay.moneymanager.transaction.dto.request.TransactionRequest;
 import com.vinay.moneymanager.transaction.dto.response.TransactionResponse;
@@ -74,7 +75,7 @@ class TransactionServiceImplTest {
     when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () ->
                 transactionService.createTransaction(
@@ -94,7 +95,7 @@ class TransactionServiceImplTest {
     when(categoryRepository.findById(anyInt())).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> transactionService.createTransaction(request, user.getEmail()));
     assertEquals("Category not found", exception.getMessage());
@@ -119,8 +120,7 @@ class TransactionServiceImplTest {
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
     when(transactionRepository.save(any(Transaction.class))).thenReturn(savedTransaction);
 
-    TransactionResponse transactionResponse =
-        transactionService.createTransaction(request, user.getEmail());
+    transactionService.createTransaction(request, user.getEmail());
 
     verify(transactionRepository).save(transactionCaptor.capture());
     Transaction capturedTransaction = transactionCaptor.getValue();
@@ -183,7 +183,7 @@ class TransactionServiceImplTest {
     when(transactionRepository.findByIdAndUser(transactionId, user)).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> transactionService.getTransaction(transactionId, user.getEmail()));
 
@@ -197,7 +197,7 @@ class TransactionServiceImplTest {
     when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () ->
                 transactionService.getTransaction(
@@ -252,7 +252,7 @@ class TransactionServiceImplTest {
     when(userRepository.findByEmail(anyString())).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> transactionService.getTransactions(getUser().getEmail()));
     assertEquals("Authenticated user not found", exception.getMessage());
@@ -299,7 +299,7 @@ class TransactionServiceImplTest {
     when(transactionRepository.findByIdAndUser(transactionId, user)).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () ->
                 transactionService.updateTransaction(
@@ -320,7 +320,7 @@ class TransactionServiceImplTest {
     when(categoryRepository.findById(anyInt())).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () ->
                 transactionService.updateTransaction(
@@ -376,7 +376,7 @@ class TransactionServiceImplTest {
     when(transactionRepository.findByIdAndUser(transactionId, user)).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> transactionService.deleteTransaction(transactionId, user.getEmail()));
     assertEquals("Transaction not found", exception.getMessage());
@@ -390,7 +390,7 @@ class TransactionServiceImplTest {
     User user = getUser();
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> transactionService.deleteTransaction(UUID.randomUUID(), user.getEmail()));
     assertEquals("Authenticated user not found", exception.getMessage());
@@ -453,7 +453,7 @@ class TransactionServiceImplTest {
     when(categoryRepository.findById(category1.getId())).thenReturn(Optional.empty());
 
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> transactionService.getTransactionsByCategory(user.getEmail(), category1.getId()));
     assertEquals("Category not found", exception.getMessage());
@@ -468,7 +468,7 @@ class TransactionServiceImplTest {
 
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> transactionService.getTransactionsByCategory(user.getEmail(), category1.getId()));
     assertEquals("Authenticated user not found", exception.getMessage());
@@ -530,11 +530,71 @@ class TransactionServiceImplTest {
 
     when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.empty());
     ResourceNotFoundException exception =
-        assertThrows(
+        assertThrowsExactly(
             ResourceNotFoundException.class,
             () -> transactionService.getTransactionsByType(user.getEmail(), type));
     assertEquals("Authenticated user not found", exception.getMessage());
     verify(transactionRepository, never()).findAllByUserAndType(user, type);
+  }
+
+  @Test
+  void shouldRejectCreateWhenCategoryTypeDoesNotMatchTransactionType() {
+    // Arrange
+    TransactionRequest request = createTransactionRequest(); // EXPENSE
+    User user = getUser();
+    Category category = getCategory("Salary");
+    category.setTransactionType(TransactionType.INCOME);
+
+    when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+    when(categoryRepository.findById(request.getCategoryId())).thenReturn(Optional.of(category));
+
+    InvalidRequestException exception =
+        assertThrowsExactly(
+            InvalidRequestException.class,
+            () -> transactionService.createTransaction(request, user.getEmail()));
+    assertEquals("Category does not match the transaction type", exception.getMessage());
+    verify(transactionRepository, never()).findAllByUserAndType(user, TransactionType.INCOME);
+  }
+
+  @Test
+  void shouldRejectUpdateWhenCategoryTypeDoesNotMatchTransactionType() {
+    User user = getUser();
+    Category existingCategory = getCategory("Food");
+    existingCategory.setTransactionType(TransactionType.EXPENSE);
+
+    TransactionRequest originalRequest = createTransactionRequest();
+    Transaction existingTransaction = getSavedTransaction(originalRequest, existingCategory, user);
+
+    // Attempt to change several fields using an incompatible category
+    Category incomeCategory = getCategory("Salary");
+    incomeCategory.setId(2);
+    incomeCategory.setTransactionType(TransactionType.INCOME);
+
+    TransactionRequest updateRequest = createTransactionRequest();
+    updateRequest.setCategoryId(incomeCategory.getId());
+    updateRequest.setType(TransactionType.EXPENSE);
+    updateRequest.setAmount(new BigDecimal("999.00"));
+    updateRequest.setDescription("Changed description");
+    updateRequest.setTransactionDate(originalRequest.getTransactionDate().plusDays(1));
+
+    when(userRepository.findByEmail(user.getEmail())).thenReturn(Optional.of(user));
+    when(transactionRepository.findByIdAndUser(existingTransaction.getId(), user))
+        .thenReturn(Optional.of(existingTransaction));
+    when(categoryRepository.findById(incomeCategory.getId()))
+        .thenReturn(Optional.of(incomeCategory));
+
+    InvalidRequestException exception =
+        assertThrowsExactly(
+            InvalidRequestException.class,
+            () ->
+                transactionService.updateTransaction(
+                    existingTransaction.getId(), updateRequest, user.getEmail()));
+
+    assertEquals("Category does not match the transaction type", exception.getMessage());
+    verify(transactionRepository, never()).save(existingTransaction);
+    assertEquals(existingTransaction.getCategory(), existingCategory);
+    assertEquals("Uber auto to Railway Station", existingTransaction.getDescription());
+    assertEquals(new BigDecimal("150.62"), existingTransaction.getAmount());
   }
 
   private Transaction getSavedTransaction(
