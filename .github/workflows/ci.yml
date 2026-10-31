@@ -1,0 +1,115 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend (Java 21)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: maven
+
+      - name: Build and test
+        env:
+          # Test-only value. The test profile provides its own default, but this
+          # keeps any placeholder resolution from failing in CI.
+          JWT_SECRET: ci-only-secret-0123456789abcdef0123456789abcdef
+        run: mvn -B -ntp verify
+
+  frontend:
+    name: Frontend (Node 22)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type-check and build
+        run: npm run build
+
+  migrations:
+    name: Database migrations (PostgreSQL 15)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: money_manager_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Apply Flyway migrations
+        run: |
+          docker run --rm --network host \
+            -v "$PWD/backend/src/main/resources/db/migration:/flyway/sql:ro" \
+            flyway/flyway:11.20.3 \
+            -url=jdbc:postgresql://localhost:5432/money_manager_ci \
+            -user=postgres \
+            -password=postgres \
+            -locations=filesystem:/flyway/sql \
+            -baselineOnMigrate=false \
+            migrate
+
+      - name: Verify migration state
+        run: |
+          version="$(docker run --rm --network host \
+            -e PGPASSWORD=postgres \
+            postgres:15 \
+            psql -h localhost -U postgres -d money_manager_ci \
+            -tAc "select version from flyway_schema_history where success order by installed_rank desc limit 1")"
+          echo "Current schema version: ${version}"
+          test "${version}" = "2"

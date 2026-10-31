@@ -69,6 +69,7 @@ Before submitting a pull request, please ensure:
 - [ ] Code is rebased on latest `develop` branch
 - [ ] Commits follow conventional commit message format
 - [ ] All tests pass locally
+- [ ] CI checks pass (backend tests, frontend lint/build, database migrations)
 - [ ] New features include appropriate tests
 - [ ] Documentation has been updated if needed
 - [ ] No unnecessary files or debug code are included
