@@ -144,7 +144,10 @@ Money manager is a web application which lets you manage your day to day finance
     README.md
 ```
 
-## How to Run (Coming Soon)
+## How to Run
+
+See [docs/Configuration.md](docs/Configuration.md) for the required environment variables
+and local setup instructions.
 
 ## License
 

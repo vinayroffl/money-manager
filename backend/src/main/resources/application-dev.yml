@@ -1,13 +1,13 @@
 spring:
   datasource:
-    username: postgres
-    url: jdbc:postgresql://localhost:5432/money_manager
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/money_manager}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
     driverClassName: org.postgresql.Driver
-    password: postgres
   h2:
     console:
-      enabled: true
+      enabled: ${H2_CONSOLE_ENABLED:true}
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: update
+      ddl-auto: ${DDL_AUTO:update}

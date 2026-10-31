@@ -12,3 +12,8 @@ spring:
   h2:
     console:
       enabled: true
+
+jwt:
+  # Test-only signing key. Never use this outside the test profile.
+  secret: ${JWT_SECRET:test-only-secret-key-for-junit-do-not-use-in-production-0123456789}
+  expiration: 3600000

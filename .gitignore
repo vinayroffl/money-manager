@@ -29,3 +29,8 @@ backend/*.iml
 backend/out/
 backend/.idea_modules/
 backend/target/
+
+# Environment files (never commit real secrets)
+.env
+.env.*
+!*.env.example
