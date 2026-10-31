@@ -168,6 +168,15 @@ class AuthenticationIntegrationTest {
   }
 
   @Test
+  void shouldNotExposeLegacyTestEndpoint() throws Exception {
+    mockMvc
+        .perform(get("/api/auth/api/test/me"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.success").value(false))
+        .andExpect(jsonPath("$.message").value("Resource not found"));
+  }
+
+  @Test
   void shouldReturnUnauthorizedWithoutJwt() throws Exception {
 
     mockMvc
