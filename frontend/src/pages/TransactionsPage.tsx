@@ -445,7 +445,6 @@ function TransactionsPage() {
               aria-labelledby="delete-modal-title"
             >
               <h3 id="delete-modal-title">Delete Transaction</h3>
-              <h3>Delete Transaction</h3>
 
               <p>Are you sure you want to delete this transaction?</p>
               {deleteErrorMessage && <p role="alert">{deleteErrorMessage}</p>}
