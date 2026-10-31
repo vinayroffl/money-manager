@@ -174,7 +174,7 @@ class AuthenticationIntegrationTest {
         .perform(get("/api/users/me"))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.success").value(false))
-        .andExpect(jsonPath("$.message").value("Invalid email or password"));
+        .andExpect(jsonPath("$.message").value("Authentication required"));
   }
 
   @Test
@@ -184,6 +184,6 @@ class AuthenticationIntegrationTest {
         .perform(get("/api/users/me").header("Authorization", "Bearer invalid.jwt.token"))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.success").value(false))
-        .andExpect(jsonPath("$.message").value("Invalid email or password"));
+        .andExpect(jsonPath("$.message").value("Authentication required"));
   }
 }

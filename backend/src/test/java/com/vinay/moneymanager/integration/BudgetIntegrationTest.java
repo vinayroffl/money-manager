@@ -337,7 +337,7 @@ class BudgetIntegrationTest {
         .perform(get(BUDGETS_CONTEXT_PATH))
         .andExpect(status().isUnauthorized())
         .andExpect(jsonPath("$.success").value(false))
-        .andExpect(jsonPath("$.message").value("Invalid email or password"));
+        .andExpect(jsonPath("$.message").value("Authentication required"));
   }
 
   @Test
