@@ -13,7 +13,6 @@ variables. Nothing sensitive is committed to the repository.
 | `DB_URL` | dev: no / prod: yes | dev: `jdbc:postgresql://localhost:5432/money_manager` | JDBC connection URL. |
 | `DB_USERNAME` | dev: no / prod: yes | dev: `postgres` | Database user. |
 | `DB_PASSWORD` | dev: no / prod: yes | dev: `postgres` | Database password. |
-| `DDL_AUTO` | No | dev: `update`, prod: `validate` | Hibernate schema mode. |
 | `H2_CONSOLE_ENABLED` | No | dev: `true`, prod: `false` | H2 console (dev only). |
 | `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` | Comma-separated list of allowed browser origins. |
 | `DB_NAME` | No | `money_manager` | Only used by Docker Compose. |
@@ -48,7 +47,7 @@ docker compose up -d postgres
 
 # 2. Backend (from backend/)
 export JWT_SECRET="<your-secret>"
-./mvnw spring-boot:run
+mvn spring-boot:run
 
 # 3. Frontend (from frontend/)
 npm install
@@ -63,6 +62,27 @@ On Windows, set `JWT_SECRET` in IntelliJ or via `set JWT_SECRET=...` in `cmd` in
 `backend/.env` is read automatically by `docker compose` when the command is run from
 `backend/`. Copy `backend/.env.example` to `backend/.env` and fill in the values. Compose
 refuses to start the backend if `JWT_SECRET` is missing.
+
+## Database migrations
+
+The schema is managed by Flyway. Migrations live in
+`backend/src/main/resources/db/migration`.
+
+- `V1__initial_schema.sql` is an exact snapshot of the pre-Flyway schema, including the
+  Hibernate-generated constraint names.
+- `V2__normalize_constraints_and_add_indexes.sql` renames those constraints and adds
+  indexes for the transaction and budget queries.
+- `dev` uses `baseline-on-migrate: true` with `baseline-version: 1`. An existing
+  Hibernate-created database is baselined at V1 and V2 runs on top; an empty database
+  runs V1 and V2 from scratch.
+- `prod` never baselines automatically. A non-empty database without a Flyway history
+  table fails on purpose.
+- Hibernate now runs with `ddl-auto: validate` in `dev` and `prod`. It no longer changes
+  the schema.
+- Tests use H2 with `create-drop`; Flyway is disabled in the `test` profile.
+
+To change the schema, add the next numbered migration (for example
+`V3__add_accounts.sql`). Never edit a migration that has already been applied.
 
 ## Rotating the JWT secret
 

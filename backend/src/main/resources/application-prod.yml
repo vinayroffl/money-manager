@@ -10,4 +10,8 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: ${DDL_AUTO:validate}
+      ddl-auto: validate
+  flyway:
+    enabled: true
+    # Never silently baseline a production database.
+    baseline-on-migrate: false

@@ -13,6 +13,10 @@ spring:
     console:
       enabled: true
 
+  # Tests use H2 with create-drop; migrations target PostgreSQL.
+  flyway:
+    enabled: false
+
 jwt:
   # Test-only signing key. Never use this outside the test profile.
   secret: ${JWT_SECRET:test-only-secret-key-for-junit-do-not-use-in-production-0123456789}
