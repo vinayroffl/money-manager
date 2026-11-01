@@ -38,7 +38,7 @@ jobs:
           # Test-only value. The test profile provides its own default, but this
           # keeps any placeholder resolution from failing in CI.
           JWT_SECRET: ci-only-secret-0123456789abcdef0123456789abcdef
-        run: mvn -B -ntp verify
+        run: ./mvnw -B -ntp verify
 
   frontend:
     name: Frontend (Node 22)

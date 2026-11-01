@@ -32,7 +32,7 @@ Money manager is a web application which lets you manage your day to day finance
 - Spring Boot 3.x
 - Spring Security
 - Spring Data JPA
-- Maven
+- Maven (via Maven Wrapper)
 
 ### Frontend
 
@@ -155,7 +155,7 @@ and local setup instructions.
 
 GitHub Actions runs on every push and pull request:
 
-- **Backend** — `mvn verify` on Java 21 (unit and integration tests).
+- **Backend** — `./mvnw verify` on Java 21 (unit and integration tests).
 - **Frontend** — `npm ci`, `npm run lint`, and `npm run build` on Node.js 22.
 - **Database migrations** — applies every Flyway migration to a throwaway PostgreSQL 15
   database and checks that the schema reaches the latest version.

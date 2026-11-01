@@ -47,7 +47,7 @@ docker compose up -d postgres
 
 # 2. Backend (from backend/)
 export JWT_SECRET="<your-secret>"
-mvn spring-boot:run
+./mvnw spring-boot:run
 
 # 3. Frontend (from frontend/)
 npm install
@@ -56,6 +56,9 @@ npm run dev
 
 On Windows, set `JWT_SECRET` in IntelliJ or via `set JWT_SECRET=...` in `cmd` instead of
 `export`.
+
+No local Maven install is required: `./mvnw` downloads the pinned Maven version on first
+use. On Windows, use `mvnw.cmd` (or `.\mvnw.cmd` in PowerShell).
 
 The frontend defaults to `http://localhost:8080` in development. If the backend runs
 elsewhere, copy `frontend/.env.example` to `frontend/.env` and set
