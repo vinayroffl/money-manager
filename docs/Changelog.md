@@ -14,4 +14,4 @@
 - Controller Tests
 - Integration Tests
 - Docker Support
-- H2 Test Profile
+- Testcontainers PostgreSQL Test Profile

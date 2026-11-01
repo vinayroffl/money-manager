@@ -86,11 +86,11 @@ The schema is managed by Flyway. Migrations live in
   runs V1 and V2 from scratch.
 - `prod` never baselines automatically. A non-empty database without a Flyway history
   table fails on purpose.
-- Hibernate now runs with `ddl-auto: validate` in `dev` and `prod`. It no longer changes
+- Hibernate runs with `ddl-auto: validate` in `dev`, `prod`, and `test`. It never changes
   the schema.
-- Tests use a Testcontainers-managed PostgreSQL 15 database with `create-drop`. Docker
-  must be running when you execute `./mvnw verify`. Flyway stays disabled in the `test`
-  profile; migrations are applied by the dedicated CI job.
+- Tests run the real Flyway migrations against a Testcontainers-managed PostgreSQL 15
+  database and then validate the entities against the resulting schema. Docker must be
+  running when you execute `./mvnw verify`.
 
 To change the schema, add the next numbered migration (for example
 `V3__add_accounts.sql`). Never edit a migration that has already been applied.

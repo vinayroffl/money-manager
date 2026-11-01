@@ -10,11 +10,12 @@ spring:
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
-      ddl-auto: create-drop
+      # Flyway owns the schema; Hibernate only checks that entities match it.
+      ddl-auto: validate
 
-  # Migrations target PostgreSQL and are verified in the dedicated CI job.
+  # Tests run the real migrations against PostgreSQL so V1/V2 are exercised.
   flyway:
-    enabled: false
+    enabled: true
 
 jwt:
   # Test-only signing key. Never use this outside the test profile.

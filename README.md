@@ -152,7 +152,8 @@ See [docs/Configuration.md](docs/Configuration.md) for the required environment 
 and local setup instructions.
 
 Backend tests run against a Testcontainers-managed PostgreSQL 15 database, so Docker
-must be running before you execute `./mvnw verify`.
+must be running before you execute `./mvnw verify`. The tests apply the real Flyway
+migrations and validate the JPA entities against the resulting schema.
 
 ## Continuous Integration
 
