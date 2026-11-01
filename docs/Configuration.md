@@ -57,6 +57,10 @@ npm run dev
 On Windows, set `JWT_SECRET` in IntelliJ or via `set JWT_SECRET=...` in `cmd` instead of
 `export`.
 
+The frontend defaults to `http://localhost:8080` in development. If the backend runs
+elsewhere, copy `frontend/.env.example` to `frontend/.env` and set
+`VITE_API_BASE_URL` (see [Frontend](#frontend)).
+
 ## Docker Compose
 
 `backend/.env` is read automatically by `docker compose` when the command is run from
@@ -93,5 +97,20 @@ variable, and restart the backend.
 
 ## Frontend
 
-The frontend currently has no environment variables. Its API base URL is hardcoded to
-`http://localhost:8080`; moving it to `VITE_API_BASE_URL` is a later step.
+| Variable | Required | Default | Description |
+| --- | --- | --- | --- |
+| `VITE_API_BASE_URL` | No | dev: `http://localhost:8080`, prod: same origin | Base URL of the backend API. A trailing slash is ignored. |
+
+Create `frontend/.env` from `frontend/.env.example`:
+
+```bash
+cd frontend
+cp .env.example .env
+```
+
+Vite only exposes variables prefixed with `VITE_` to browser code, so **never put
+secrets in `VITE_*` variables**. They are embedded in the client bundle.
+
+For a production build, set `VITE_API_BASE_URL` to the public backend URL (for example
+`https://api.example.com`) before running `npm run build`. If it is unset, the build
+uses the same origin as the frontend.
