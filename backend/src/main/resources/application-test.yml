@@ -1,19 +1,18 @@
 spring:
   datasource:
-    url: jdbc:h2:mem:testdb
-    driver-class-name: org.h2.Driver
-    username: sa
-    password:
+    # Testcontainers starts a PostgreSQL 15 container on first use and reuses it
+    # for the rest of the JVM. Docker must be running.
+    url: jdbc:tc:postgresql:15:///money_manager
+    driver-class-name: org.testcontainers.jdbc.ContainerDatabaseDriver
+    username: test
+    password: test
 
   jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
     hibernate:
       ddl-auto: create-drop
 
-  h2:
-    console:
-      enabled: true
-
-  # Tests use H2 with create-drop; migrations target PostgreSQL.
+  # Migrations target PostgreSQL and are verified in the dedicated CI job.
   flyway:
     enabled: false
 

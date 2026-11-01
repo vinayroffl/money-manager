@@ -151,11 +151,15 @@ Money manager is a web application which lets you manage your day to day finance
 See [docs/Configuration.md](docs/Configuration.md) for the required environment variables
 and local setup instructions.
 
+Backend tests run against a Testcontainers-managed PostgreSQL 15 database, so Docker
+must be running before you execute `./mvnw verify`.
+
 ## Continuous Integration
 
 GitHub Actions runs on every push and pull request:
 
-- **Backend** — `./mvnw verify` on Java 21 (unit and integration tests).
+- **Backend** — `./mvnw verify` on Java 21 (unit and integration tests against
+  Testcontainers PostgreSQL).
 - **Frontend** — `npm ci`, `npm run lint`, and `npm run build` on Node.js 22.
 - **Backend image** — builds the multi-stage Docker image from `backend/` and checks
   that it starts Java 21.

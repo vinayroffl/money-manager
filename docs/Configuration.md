@@ -13,7 +13,6 @@ variables. Nothing sensitive is committed to the repository.
 | `DB_URL` | dev: no / prod: yes | dev: `jdbc:postgresql://localhost:5432/money_manager` | JDBC connection URL. |
 | `DB_USERNAME` | dev: no / prod: yes | dev: `postgres` | Database user. |
 | `DB_PASSWORD` | dev: no / prod: yes | dev: `postgres` | Database password. |
-| `H2_CONSOLE_ENABLED` | No | dev: `true`, prod: `false` | H2 console (dev only). |
 | `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` | Comma-separated list of allowed browser origins. |
 | `DB_NAME` | No | `money_manager` | Only used by Docker Compose. |
 
@@ -89,7 +88,9 @@ The schema is managed by Flyway. Migrations live in
   table fails on purpose.
 - Hibernate now runs with `ddl-auto: validate` in `dev` and `prod`. It no longer changes
   the schema.
-- Tests use H2 with `create-drop`; Flyway is disabled in the `test` profile.
+- Tests use a Testcontainers-managed PostgreSQL 15 database with `create-drop`. Docker
+  must be running when you execute `./mvnw verify`. Flyway stays disabled in the `test`
+  profile; migrations are applied by the dedicated CI job.
 
 To change the schema, add the next numbered migration (for example
 `V3__add_accounts.sql`). Never edit a migration that has already been applied.
