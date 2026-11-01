@@ -157,6 +157,8 @@ GitHub Actions runs on every push and pull request:
 
 - **Backend** — `./mvnw verify` on Java 21 (unit and integration tests).
 - **Frontend** — `npm ci`, `npm run lint`, and `npm run build` on Node.js 22.
+- **Backend image** — builds the multi-stage Docker image from `backend/` and checks
+  that it starts Java 21.
 - **Database migrations** — applies every Flyway migration to a throwaway PostgreSQL 15
   database and checks that the schema reaches the latest version.
 

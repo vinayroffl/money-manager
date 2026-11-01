@@ -3,18 +3,15 @@ echo ========================================
 echo Deploying Money Manager Backend
 echo ========================================
 
-echo [1/3] Building JAR...
-call mvn clean package -DskipTests
+echo [1/2] Building Docker image...
+docker-compose build backend
 if %errorlevel% neq 0 (
     echo ERROR: Build failed!
     pause
     exit /b 1
 )
 
-echo [2/3] Rebuilding Docker image...
-docker-compose build backend
-
-echo [3/3] Restarting containers...
+echo [2/2] Restarting containers...
 docker-compose up -d backend
 
 echo ========================================

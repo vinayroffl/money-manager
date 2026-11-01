@@ -70,6 +70,9 @@ elsewhere, copy `frontend/.env.example` to `frontend/.env` and set
 `backend/`. Copy `backend/.env.example` to `backend/.env` and fill in the values. Compose
 refuses to start the backend if `JWT_SECRET` is missing.
 
+`docker compose up -d --build backend` builds the image from source using the Maven
+Wrapper inside the build stage, so no local Maven install or prebuilt jar is required.
+
 ## Database migrations
 
 The schema is managed by Flyway. Migrations live in

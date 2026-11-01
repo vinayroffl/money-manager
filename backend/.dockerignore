@@ -1,0 +1,12 @@
+# Build output and local IDE files are not needed in the build context.
+target/
+.idea/
+*.iml
+
+# Never send local secrets to the Docker daemon.
+.env
+.env.*
+
+# Compose and deployment helpers are not part of the image.
+docker-compose.yml
+deploy.bat
