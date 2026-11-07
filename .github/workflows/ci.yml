@@ -75,6 +75,21 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_DB: money_manager_ci
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -94,6 +109,33 @@ jobs:
 
       - name: Smoke-test image
         run: docker run --rm --entrypoint java money-manager-backend:ci -version
+
+      - name: Start backend and check health
+        run: |
+          docker run -d --name money-manager-smoke \
+            --network host \
+            -e SPRING_PROFILES_ACTIVE=prod \
+            -e DB_URL=jdbc:postgresql://localhost:5432/money_manager_ci \
+            -e DB_USERNAME=postgres \
+            -e DB_PASSWORD=postgres \
+            -e JWT_SECRET=ci-only-secret-0123456789abcdef0123456789abcdef \
+            money-manager-backend:ci
+
+          for _ in $(seq 1 60); do
+            if curl --fail --silent http://localhost:8080/actuator/health -o /tmp/health.json; then
+              cat /tmp/health.json
+              grep -q '"status":"UP"' /tmp/health.json && exit 0
+            fi
+            sleep 2
+          done
+
+          echo "Backend did not become healthy"
+          docker logs money-manager-smoke
+          exit 1
+
+      - name: Stop backend
+        if: always()
+        run: docker rm -f money-manager-smoke || true
 
   migrations:
     name: Database migrations (PostgreSQL 15)

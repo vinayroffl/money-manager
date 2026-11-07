@@ -160,10 +160,10 @@ migrations and validate the JPA entities against the resulting schema.
 GitHub Actions runs on every push and pull request:
 
 - **Backend** — `./mvnw verify` on Java 21 (unit and integration tests against
-  Testcontainers PostgreSQL).
+  Testcontainers PostgreSQL, plus JaCoCo coverage checks).
 - **Frontend** — `npm ci`, `npm run lint`, and `npm run build` on Node.js 22.
-- **Backend image** — builds the multi-stage Docker image from `backend/` and checks
-  that it starts Java 21.
+- **Backend image** — builds the multi-stage Docker image, starts it against a
+  PostgreSQL 15 service, and checks `/actuator/health`.
 - **Database migrations** — applies every Flyway migration to a throwaway PostgreSQL 15
   database and checks that the schema reaches the latest version.
 

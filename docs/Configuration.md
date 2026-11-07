@@ -63,6 +63,15 @@ The frontend defaults to `http://localhost:8080` in development. If the backend 
 elsewhere, copy `frontend/.env.example` to `frontend/.env` and set
 `VITE_API_BASE_URL` (see [Frontend](#frontend)).
 
+### Health check
+
+The backend exposes `/actuator/health` without authentication. It returns HTTP 200 with
+`{"status":"UP"}` when the application and database are reachable:
+
+```bash
+curl http://localhost:8080/actuator/health
+```
+
 ## Docker Compose
 
 `backend/.env` is read automatically by `docker compose` when the command is run from
@@ -94,6 +103,12 @@ The schema is managed by Flyway. Migrations live in
 
 To change the schema, add the next numbered migration (for example
 `V3__add_accounts.sql`). Never edit a migration that has already been applied.
+
+## Test coverage
+
+`./mvnw verify` runs JaCoCo and fails if overall line coverage drops below 90% or branch
+coverage below 70%. The HTML report is written to
+`backend/target/site/jacoco/index.html`.
 
 ## Rotating the JWT secret
 
