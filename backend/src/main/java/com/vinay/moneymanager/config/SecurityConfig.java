@@ -40,7 +40,11 @@ public class SecurityConfig {
         .exceptionHandling(
             exception -> exception.authenticationEntryPoint(authenticationEntryPoint))
         .authorizeHttpRequests(
-            auth -> auth.requestMatchers("/api/auth/**").permitAll().anyRequest().authenticated())
+            auth ->
+                auth.requestMatchers("/api/auth/**", "/actuator/health", "/actuator/health/**")
+                    .permitAll()
+                    .anyRequest()
+                    .authenticated())
         .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
     return http.build();

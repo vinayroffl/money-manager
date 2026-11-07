@@ -187,6 +187,14 @@ class AuthenticationIntegrationTest {
   }
 
   @Test
+  void shouldExposeHealthEndpointWithoutAuthentication() throws Exception {
+    mockMvc
+        .perform(get("/actuator/health"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.status").value("UP"));
+  }
+
+  @Test
   void shouldReturnUnauthorizedWithInvalidJwt() throws Exception {
 
     mockMvc
