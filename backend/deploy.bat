@@ -1,28 +1,39 @@
 @echo off
 echo ========================================
-echo Deploying Money Manager Backend
+echo Deploying Money Manager (frontend + backend)
 echo ========================================
 
-echo [1/2] Building Docker image...
-docker-compose build backend
+pushd "%~dp0.."
+
+echo [1/2] Building Docker images...
+docker compose build
 if %errorlevel% neq 0 (
     echo ERROR: Build failed!
+    popd
     pause
     exit /b 1
 )
 
-echo [2/2] Restarting containers...
-docker-compose up -d backend
+echo [2/2] Starting containers...
+docker compose up -d
+if %errorlevel% neq 0 (
+    echo ERROR: Startup failed!
+    popd
+    pause
+    exit /b 1
+)
 
 echo ========================================
 echo DEPLOYMENT COMPLETE! 🎉
 echo ========================================
 echo.
 echo Running containers:
-docker-compose ps
+docker compose ps
 echo.
-echo Recent logs:
-docker-compose logs --tail 20 backend
+echo Recent backend logs:
+docker compose logs --tail 20 backend
 echo.
+echo Frontend available at: http://localhost:3000
 echo API available at: http://localhost:8080
+popd
 pause

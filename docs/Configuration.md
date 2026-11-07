@@ -14,7 +14,6 @@ variables. Nothing sensitive is committed to the repository.
 | `DB_USERNAME` | dev: no / prod: yes | dev: `postgres` | Database user. |
 | `DB_PASSWORD` | dev: no / prod: yes | dev: `postgres` | Database password. |
 | `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` | Comma-separated list of allowed browser origins. |
-| `DB_NAME` | No | `money_manager` | Only used by Docker Compose. |
 
 The `prod` profile intentionally has no defaults for `DB_URL`, `DB_USERNAME`, or
 `DB_PASSWORD`: the application will fail fast instead of silently using development
@@ -41,7 +40,8 @@ usually easier than system-wide variables and does not require restarting Window
 ## Local run
 
 ```bash
-# 1. Start PostgreSQL (from backend/)
+# 1. Start PostgreSQL (from the repository root; create .env first as described in
+#    "Full-stack Docker Compose")
 docker compose up -d postgres
 
 # 2. Backend (from backend/)
@@ -72,14 +72,74 @@ The backend exposes `/actuator/health` without authentication. It returns HTTP 2
 curl http://localhost:8080/actuator/health
 ```
 
-## Docker Compose
+## Full-stack Docker Compose
 
-`backend/.env` is read automatically by `docker compose` when the command is run from
-`backend/`. Copy `backend/.env.example` to `backend/.env` and fill in the values. Compose
-refuses to start the backend if `JWT_SECRET` is missing.
+The root `docker-compose.yml` runs PostgreSQL, the backend, and the frontend:
 
-`docker compose up -d --build backend` builds the image from source using the Maven
-Wrapper inside the build stage, so no local Maven install or prebuilt jar is required.
+- `postgres` — PostgreSQL 15 with data in the `money-manager_postgres_data` volume.
+- `backend` — the Spring Boot image using the `prod` profile. Flyway runs on startup.
+- `frontend` — Nginx serving the Vite build and proxying `/api` to the backend.
+
+### 1. Configure environment variables
+
+From the repository root:
+
+```bash
+cp .env.example .env
+openssl rand -hex 32
+```
+
+Put the generated value in `.env` as `JWT_SECRET`. The defaults work for a local
+machine; adjust these if needed:
+
+| Variable | Default | Purpose |
+| --- | --- | --- |
+| `POSTGRES_DB` | `money_manager` | Database name. |
+| `POSTGRES_USER` | `postgres` | Database user. |
+| `POSTGRES_PASSWORD` | `postgres` | Database password. |
+| `POSTGRES_PORT` | `5432` | Host port for PostgreSQL. |
+| `JWT_SECRET` | — | Required HS256 signing key. |
+| `BACKEND_PORT` | `8080` | Host port for the backend. |
+| `FRONTEND_PORT` | `3000` | Host port for the frontend. |
+| `VITE_API_BASE_URL` | empty | Empty uses the same-origin Nginx proxy. |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:3000` | Only needed for direct backend calls. |
+
+`.env` is gitignored. `backend/.env` is still used by local Maven/IDE runs and is not read
+by the root Compose file.
+
+### 2. Build and start
+
+```bash
+docker compose up -d --build
+docker compose ps
+```
+
+Then open:
+
+- Frontend: <http://localhost:3000>
+- API directly: <http://localhost:8080>
+- Health: <http://localhost:8080/actuator/health>
+
+The frontend calls `/api` on its own origin, and Nginx forwards those requests to
+`backend:8080`. This avoids CORS and does not require `VITE_API_BASE_URL`.
+
+### 3. Common commands
+
+```bash
+# Rebuild after code changes
+docker compose up -d --build
+
+# Follow logs
+docker compose logs -f backend frontend
+
+# Stop containers (database data is preserved)
+docker compose down
+
+# Stop and delete the database volume
+docker compose down -v
+```
+
+On Windows, `backend\deploy.bat` runs the build and start steps.
 
 ## Database migrations
 

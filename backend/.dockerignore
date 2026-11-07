@@ -8,5 +8,4 @@ target/
 .env.*
 
 # Compose and deployment helpers are not part of the image.
-docker-compose.yml
 deploy.bat

@@ -1,0 +1,11 @@
+node_modules
+dist
+dist-ssr
+
+# Local Vite env files must not override the build arguments.
+.env
+.env.*
+
+*.log
+.idea
+.vscode

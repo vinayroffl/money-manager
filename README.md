@@ -151,6 +151,18 @@ Money manager is a web application which lets you manage your day to day finance
 See [docs/Configuration.md](docs/Configuration.md) for the required environment variables
 and local setup instructions.
 
+### Full-stack Docker
+
+```bash
+cp .env.example .env
+# Add a JWT_SECRET generated with: openssl rand -hex 32
+docker compose up -d --build
+```
+
+The frontend is served at <http://localhost:3000>. Nginx proxies `/api` requests to the
+backend, which runs at <http://localhost:8080>. On Windows, `backend\deploy.bat` performs
+the same build and start steps.
+
 Backend tests run against a Testcontainers-managed PostgreSQL 15 database, so Docker
 must be running before you execute `./mvnw verify`. The tests apply the real Flyway
 migrations and validate the JPA entities against the resulting schema.
